@@ -3,7 +3,11 @@ import { summarizeMonth } from "./rollup";
 import { addMonths, monthDateRange, previousMonth } from "./month";
 import type { Budget, Category, Transaction } from "./types";
 
-const cat = (id: string, kind: "income" | "expense", archived = false): Category => ({
+const cat = (
+  id: string,
+  kind: "income" | "expense",
+  archived = false,
+): Category => ({
   id,
   name: id,
   kind,
@@ -38,16 +42,29 @@ describe("summarizeMonth", () => {
   });
 
   it("income diff is actual minus planned", () => {
-    const s = summarizeMonth([cat("salary", "income")], [bud("salary", 800000)], [tx("salary", 850000)]);
+    const s = summarizeMonth(
+      [cat("salary", "income")],
+      [bud("salary", 800000)],
+      [tx("salary", 850000)],
+    );
     expect(s.rows[0]!.diffCents).toBe(50000);
   });
 
   it("includes categories with a plan but no transactions, and vice versa", () => {
     const cats = [cat("rent", "expense"), cat("surprise", "expense")];
-    const s = summarizeMonth(cats, [bud("rent", 250000)], [tx("surprise", 1000)]);
-    expect(s.rows.map((r) => r.category.id).sort()).toEqual(["rent", "surprise"]);
+    const s = summarizeMonth(
+      cats,
+      [bud("rent", 250000)],
+      [tx("surprise", 1000)],
+    );
+    expect(s.rows.map((r) => r.category.id).sort()).toEqual([
+      "rent",
+      "surprise",
+    ]);
     expect(s.rows.find((r) => r.category.id === "rent")!.actualCents).toBe(0);
-    expect(s.rows.find((r) => r.category.id === "surprise")!.plannedCents).toBe(0);
+    expect(s.rows.find((r) => r.category.id === "surprise")!.plannedCents).toBe(
+      0,
+    );
   });
 
   it("empty month yields empty summary", () => {
@@ -57,7 +74,11 @@ describe("summarizeMonth", () => {
   });
 
   it("archived categories with month data still appear", () => {
-    const s = summarizeMonth([cat("old", "expense", true)], [], [tx("old", 500)]);
+    const s = summarizeMonth(
+      [cat("old", "expense", true)],
+      [],
+      [tx("old", 500)],
+    );
     expect(s.rows).toHaveLength(1);
   });
 });
@@ -71,7 +92,13 @@ describe("month utils", () => {
     expect(previousMonth("2026-07")).toBe("2026-06");
   });
   it("monthDateRange is end-exclusive", () => {
-    expect(monthDateRange("2026-07")).toEqual({ start: "2026-07-01", end: "2026-08-01" });
-    expect(monthDateRange("2026-12")).toEqual({ start: "2026-12-01", end: "2027-01-01" });
+    expect(monthDateRange("2026-07")).toEqual({
+      start: "2026-07-01",
+      end: "2026-08-01",
+    });
+    expect(monthDateRange("2026-12")).toEqual({
+      start: "2026-12-01",
+      end: "2027-01-01",
+    });
   });
 });

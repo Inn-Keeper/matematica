@@ -12,7 +12,8 @@ import { useState } from "react";
 import { sb } from "../lib/supabase";
 
 function DiffCell({ cents }: { cents: number }) {
-  const tone = cents === 0 ? color.textMuted : cents > 0 ? color.income : color.expense;
+  const tone =
+    cents === 0 ? color.textMuted : cents > 0 ? color.income : color.expense;
   return (
     <td className="text-right" style={{ color: tone, fontFamily: font.mono }}>
       {cents > 0 ? "+" : ""}
@@ -41,7 +42,11 @@ export function SummaryTable({
       return;
     }
     try {
-      await upsertBudget(sb, { category_id: categoryId, month, planned_cents: cents });
+      await upsertBudget(sb, {
+        category_id: categoryId,
+        month,
+        planned_cents: cents,
+      });
       setEditing(null);
       setError(null);
       onChanged();
@@ -51,7 +56,13 @@ export function SummaryTable({
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
       <table className="w-full" style={{ fontSize: 14 }}>
         <thead>
           <tr style={{ color: color.textMuted, textAlign: "right" }}>
@@ -65,11 +76,22 @@ export function SummaryTable({
         </thead>
         <tbody>
           {summary.rows.map((row) => (
-            <tr key={row.category.id} style={{ borderTop: `1px solid ${color.hairline}` }}>
+            <tr
+              key={row.category.id}
+              style={{ borderTop: `1px solid ${color.hairline}` }}
+            >
               <td style={{ padding: `${space.sm}px 0` }}>
                 {row.category.name}
                 {row.category.kind === "income" && (
-                  <span style={{ color: color.income, marginLeft: space.sm, fontSize: 11 }}>renda</span>
+                  <span
+                    style={{
+                      color: color.income,
+                      marginLeft: space.sm,
+                      fontSize: 11,
+                    }}
+                  >
+                    renda
+                  </span>
                 )}
               </td>
               <td
@@ -77,7 +99,9 @@ export function SummaryTable({
                 style={{ fontFamily: font.mono }}
                 onClick={() => {
                   setEditing(row.category.id);
-                  setDraft((row.plannedCents / 100).toFixed(2).replace(".", ","));
+                  setDraft(
+                    (row.plannedCents / 100).toFixed(2).replace(".", ","),
+                  );
                 }}
               >
                 {editing === row.category.id ? (
@@ -86,9 +110,15 @@ export function SummaryTable({
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onBlur={() => savePlanned(row.category.id)}
-                    onKeyDown={(e) => e.key === "Enter" && savePlanned(row.category.id)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && savePlanned(row.category.id)
+                    }
                     className="w-24 text-right"
-                    style={{ background: color.cardAlt, borderRadius: 6, fontFamily: font.mono }}
+                    style={{
+                      background: color.cardAlt,
+                      borderRadius: 6,
+                      fontFamily: font.mono,
+                    }}
                   />
                 ) : (
                   formatBRL(row.plannedCents)
@@ -102,7 +132,12 @@ export function SummaryTable({
           ))}
         </tbody>
         <tfoot>
-          <tr style={{ borderTop: `1px solid ${color.hairline}`, fontWeight: 700 }}>
+          <tr
+            style={{
+              borderTop: `1px solid ${color.hairline}`,
+              fontWeight: 700,
+            }}
+          >
             <td style={{ padding: `${space.sm}px 0` }}>Saldo do mês</td>
             <td />
             <td />
@@ -110,7 +145,8 @@ export function SummaryTable({
               className="text-right"
               style={{
                 fontFamily: font.mono,
-                color: summary.remainingCents >= 0 ? color.income : color.expense,
+                color:
+                  summary.remainingCents >= 0 ? color.income : color.expense,
               }}
             >
               {formatBRL(summary.remainingCents)}
@@ -118,7 +154,9 @@ export function SummaryTable({
           </tr>
         </tfoot>
       </table>
-      {error && <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>}
+      {error && (
+        <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>
+      )}
     </section>
   );
 }

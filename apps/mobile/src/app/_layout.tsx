@@ -18,10 +18,21 @@ function AuthScreen() {
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24, backgroundColor: color.screen }}>
-      <Text style={{ color: color.text, fontSize: 24, marginBottom: 16 }}>matematica</Text>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        padding: 24,
+        backgroundColor: color.screen,
+      }}
+    >
+      <Text style={{ color: color.text, fontSize: 24, marginBottom: 16 }}>
+        matematica
+      </Text>
       {status === "sent" ? (
-        <Text style={{ color: color.textSecondary }}>Link enviado. Confira seu e-mail.</Text>
+        <Text style={{ color: color.textSecondary }}>
+          Link enviado. Confira seu e-mail.
+        </Text>
       ) : (
         <>
           <TextInput
@@ -40,7 +51,9 @@ function AuthScreen() {
             }}
           />
           <Button title="Entrar" color={color.brand} onPress={sendLink} />
-          {status !== "idle" && <Text style={{ color: color.expense }}>{status}</Text>}
+          {status !== "idle" && (
+            <Text style={{ color: color.expense }}>{status}</Text>
+          )}
         </>
       )}
     </View>
@@ -65,7 +78,10 @@ export default function Layout() {
   return (
     <SessionContext.Provider value={session}>
       <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.screen } }}
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: color.screen },
+        }}
       />
     </SessionContext.Provider>
   );

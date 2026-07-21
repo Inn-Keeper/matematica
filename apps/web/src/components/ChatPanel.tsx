@@ -11,7 +11,13 @@ import type { Session } from "@supabase/supabase-js";
 import { motion } from "motion/react";
 import { useState } from "react";
 
-export function ChatPanel({ month, session }: { month: string; session: Session }) {
+export function ChatPanel({
+  month,
+  session,
+}: {
+  month: string;
+  session: Session;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -21,7 +27,10 @@ export function ChatPanel({ month, session }: { month: string; session: Session 
     e.preventDefault();
     const question = input.trim();
     if (!question || busy) return;
-    const history: ChatMessage[] = [...messages, { role: "user", text: question }];
+    const history: ChatMessage[] = [
+      ...messages,
+      { role: "user", text: question },
+    ];
     setMessages([...history, { role: "assistant", text: "" }]);
     setInput("");
     setBusy(true);
@@ -46,8 +55,20 @@ export function ChatPanel({ month, session }: { month: string; session: Session 
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
-      <h2 style={{ fontFamily: font.display, fontSize: 16, marginBottom: space.sm }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: font.display,
+          fontSize: 16,
+          marginBottom: space.sm,
+        }}
+      >
         Assistente do mês
       </h2>
       <div className="flex flex-col" style={{ gap: space.sm }}>
@@ -71,8 +92,14 @@ export function ChatPanel({ month, session }: { month: string; session: Session 
           </motion.p>
         ))}
       </div>
-      {error && <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>}
-      <form onSubmit={send} className="flex" style={{ gap: space.sm, marginTop: space.md }}>
+      {error && (
+        <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>
+      )}
+      <form
+        onSubmit={send}
+        className="flex"
+        style={{ gap: space.sm, marginTop: space.md }}
+      >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}

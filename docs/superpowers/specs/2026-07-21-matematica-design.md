@@ -73,7 +73,7 @@ Amounts are `integer` cents. Months are `text 'YYYY-MM'`.
   consumes them directly in styles.
 - `money.ts` — cents ↔ display formatting (`Intl.NumberFormat('pt-BR')`).
 - `rollup.ts` — `summarizeMonth(categories, budgets, transactions) →
-  MonthSummary` (per-category planned/actual/diff, income total, expense
+MonthSummary` (per-category planned/actual/diff, income total, expense
   total, remaining). Pure function; the app's only non-trivial logic.
 - `data.ts` — Supabase queries: fetch month data, CRUD categories/budgets/
   transactions, `copyPlanFromPreviousMonth(month)`.

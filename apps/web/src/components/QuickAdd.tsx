@@ -20,7 +20,9 @@ export function QuickAdd({
 }) {
   const active = categories.filter((c) => !c.archived);
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(today.startsWith(month) ? today : `${month}-01`);
+  const [date, setDate] = useState(
+    today.startsWith(month) ? today : `${month}-01`,
+  );
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -32,7 +34,12 @@ export function QuickAdd({
     if (cents === null || cents === 0) return setError("Valor inválido");
     if (!categoryId) return setError("Escolha uma categoria");
     try {
-      await addTransaction(sb, { category_id: categoryId, date, amount_cents: cents, description });
+      await addTransaction(sb, {
+        category_id: categoryId,
+        date,
+        amount_cents: cents,
+        description,
+      });
       setAmount("");
       setDescription("");
       setError(null);
@@ -53,10 +60,26 @@ export function QuickAdd({
     <form
       onSubmit={submit}
       className="flex flex-wrap items-center"
-      style={{ gap: space.sm, background: color.card, borderRadius: radius.card, padding: space.md }}
+      style={{
+        gap: space.sm,
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
     >
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required style={field} />
-      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required style={field}>
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        required
+        style={field}
+      />
+      <select
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+        required
+        style={field}
+      >
         <option value="">categoria…</option>
         {active.map((c) => (
           <option key={c.id} value={c.id}>

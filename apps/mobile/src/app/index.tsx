@@ -49,7 +49,9 @@ export default function MonthScreen() {
     reload();
   }, [reload]);
 
-  const summary = data ? summarizeMonth(data.categories, data.budgets, data.transactions) : null;
+  const summary = data
+    ? summarizeMonth(data.categories, data.budgets, data.transactions)
+    : null;
   const active = data?.categories.filter((c) => !c.archived) ?? [];
 
   async function guard(action: () => Promise<unknown>) {
@@ -122,7 +124,13 @@ export default function MonthScreen() {
         <Pressable onPress={() => setMonth((m) => addMonths(m, -1))}>
           <Text style={{ color: color.text, fontSize: 22 }}>←</Text>
         </Pressable>
-        <Text style={{ color: color.text, fontSize: 20, textTransform: "capitalize" }}>
+        <Text
+          style={{
+            color: color.text,
+            fontSize: 20,
+            textTransform: "capitalize",
+          }}
+        >
           {monthLabel}
         </Text>
         <Pressable onPress={() => setMonth((m) => addMonths(m, 1))}>
@@ -137,7 +145,11 @@ export default function MonthScreen() {
           {data.budgets.length === 0 && (
             <Pressable
               onPress={() => guard(() => copyPlanFromPreviousMonth(sb, month))}
-              style={{ backgroundColor: color.brandSoft, borderRadius: 10, padding: 12 }}
+              style={{
+                backgroundColor: color.brandSoft,
+                borderRadius: 10,
+                padding: 12,
+              }}
             >
               <Text style={{ color: color.brand, textAlign: "center" }}>
                 Copiar plano do mês anterior
@@ -145,10 +157,22 @@ export default function MonthScreen() {
             </Pressable>
           )}
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16, gap: 8 }}>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 8,
+            }}
+          >
             {summary.rows.map((r) => (
-              <View key={r.category.id} style={[row, { justifyContent: "space-between" }]}>
-                <Text style={{ color: color.text, flex: 1 }}>{r.category.name}</Text>
+              <View
+                key={r.category.id}
+                style={[row, { justifyContent: "space-between" }]}
+              >
+                <Text style={{ color: color.text, flex: 1 }}>
+                  {r.category.name}
+                </Text>
                 <Text style={{ color: color.textSecondary, marginRight: 12 }}>
                   {formatBRL(r.actualCents)} / {formatBRL(r.plannedCents)}
                 </Text>
@@ -178,10 +202,13 @@ export default function MonthScreen() {
                 },
               ]}
             >
-              <Text style={{ color: color.text, fontWeight: "700" }}>Saldo do mês</Text>
+              <Text style={{ color: color.text, fontWeight: "700" }}>
+                Saldo do mês
+              </Text>
               <Text
                 style={{
-                  color: summary.remainingCents >= 0 ? color.income : color.expense,
+                  color:
+                    summary.remainingCents >= 0 ? color.income : color.expense,
                   fontWeight: "700",
                 }}
               >
@@ -190,20 +217,33 @@ export default function MonthScreen() {
             </View>
           </View>
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16, gap: 8 }}>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 8,
+            }}
+          >
             <View style={[row, { gap: 8, flexWrap: "wrap" }]}>
               {active.map((c) => (
                 <Pressable
                   key={c.id}
                   onPress={() => setCategoryId(c.id)}
                   style={{
-                    backgroundColor: categoryId === c.id ? color.brandSoft : color.cardAlt,
+                    backgroundColor:
+                      categoryId === c.id ? color.brandSoft : color.cardAlt,
                     borderRadius: 999,
                     paddingHorizontal: 12,
                     paddingVertical: 6,
                   }}
                 >
-                  <Text style={{ color: categoryId === c.id ? color.brand : color.textSecondary }}>
+                  <Text
+                    style={{
+                      color:
+                        categoryId === c.id ? color.brand : color.textSecondary,
+                    }}
+                  >
                     {c.name}
                   </Text>
                 </Pressable>
@@ -215,50 +255,107 @@ export default function MonthScreen() {
               placeholder="valor"
               placeholderTextColor={color.textMuted}
               keyboardType="decimal-pad"
-              style={{ color: color.text, backgroundColor: color.cardAlt, borderRadius: 10, padding: 10 }}
+              style={{
+                color: color.text,
+                backgroundColor: color.cardAlt,
+                borderRadius: 10,
+                padding: 10,
+              }}
             />
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder="descrição"
               placeholderTextColor={color.textMuted}
-              style={{ color: color.text, backgroundColor: color.cardAlt, borderRadius: 10, padding: 10 }}
+              style={{
+                color: color.text,
+                backgroundColor: color.cardAlt,
+                borderRadius: 10,
+                padding: 10,
+              }}
             />
-            <Pressable onPress={addTx} style={{ backgroundColor: color.brand, borderRadius: 10, padding: 12 }}>
-              <Text style={{ color: color.screen, textAlign: "center", fontWeight: "700" }}>
+            <Pressable
+              onPress={addTx}
+              style={{
+                backgroundColor: color.brand,
+                borderRadius: 10,
+                padding: 12,
+              }}
+            >
+              <Text
+                style={{
+                  color: color.screen,
+                  textAlign: "center",
+                  fontWeight: "700",
+                }}
+              >
                 Adicionar
               </Text>
             </Pressable>
           </View>
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16 }}>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+            }}
+          >
             {data.transactions.length === 0 && (
-              <Text style={{ color: color.textMuted }}>Nenhum lançamento neste mês.</Text>
+              <Text style={{ color: color.textMuted }}>
+                Nenhum lançamento neste mês.
+              </Text>
             )}
             {data.transactions.map((t) => {
               const cat = data.categories.find((c) => c.id === t.category_id);
               return (
-                <View key={t.id} style={[row, { justifyContent: "space-between", paddingVertical: 6 }]}>
+                <View
+                  key={t.id}
+                  style={[
+                    row,
+                    { justifyContent: "space-between", paddingVertical: 6 },
+                  ]}
+                >
                   <Text style={{ color: color.textMuted, fontSize: 12 }}>
                     {t.date.slice(8, 10)}/{t.date.slice(5, 7)}
                   </Text>
-                  <Text style={{ color: color.text, flex: 1, marginLeft: 12 }} numberOfLines={1}>
+                  <Text
+                    style={{ color: color.text, flex: 1, marginLeft: 12 }}
+                    numberOfLines={1}
+                  >
                     {t.description || cat?.name || "—"}
                   </Text>
-                  <Text style={{ color: cat?.kind === "income" ? color.income : color.text }}>
+                  <Text
+                    style={{
+                      color: cat?.kind === "income" ? color.income : color.text,
+                    }}
+                  >
                     {cat?.kind === "income" ? "+" : "−"}
                     {formatBRL(t.amount_cents)}
                   </Text>
-                  <Pressable onPress={() => guard(() => deleteTransaction(sb, t.id))}>
-                    <Text style={{ color: color.expense, marginLeft: 12 }}>×</Text>
+                  <Pressable
+                    onPress={() => guard(() => deleteTransaction(sb, t.id))}
+                  >
+                    <Text style={{ color: color.expense, marginLeft: 12 }}>
+                      ×
+                    </Text>
                   </Pressable>
                 </View>
               );
             })}
           </View>
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16, gap: 8 }}>
-            <Text style={{ color: color.text, fontWeight: "700" }}>Assistente do mês</Text>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 8,
+            }}
+          >
+            <Text style={{ color: color.text, fontWeight: "700" }}>
+              Assistente do mês
+            </Text>
             {chat.map((m, i) => (
               <Text
                 key={i}
@@ -294,14 +391,24 @@ export default function MonthScreen() {
                   opacity: busy ? 0.5 : 1,
                 }}
               >
-                <Text style={{ color: color.screen, fontWeight: "700" }}>→</Text>
+                <Text style={{ color: color.screen, fontWeight: "700" }}>
+                  →
+                </Text>
               </Pressable>
             </View>
           </View>
         </>
       )}
       <Pressable onPress={() => sb.auth.signOut()}>
-        <Text style={{ color: color.textMuted, textAlign: "center", marginBottom: 40 }}>sair</Text>
+        <Text
+          style={{
+            color: color.textMuted,
+            textAlign: "center",
+            marginBottom: 40,
+          }}
+        >
+          sair
+        </Text>
       </Pressable>
     </ScrollView>
   );

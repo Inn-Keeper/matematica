@@ -43,7 +43,9 @@ export function MonthScreen({ session }: { session: Session }) {
     reload();
   }, [reload]);
 
-  const summary = data ? summarizeMonth(data.categories, data.budgets, data.transactions) : null;
+  const summary = data
+    ? summarizeMonth(data.categories, data.budgets, data.transactions)
+    : null;
   const emptyPlan = data !== null && data.budgets.length === 0;
 
   async function copyPlan() {
@@ -63,22 +65,44 @@ export function MonthScreen({ session }: { session: Session }) {
   return (
     <main
       className="min-h-screen"
-      style={{ background: color.screen, color: color.text, fontFamily: font.body }}
+      style={{
+        background: color.screen,
+        color: color.text,
+        fontFamily: font.body,
+      }}
     >
-      <div className="mx-auto flex max-w-3xl flex-col" style={{ gap: space.lg, padding: space.lg }}>
+      <div
+        className="mx-auto flex max-w-3xl flex-col"
+        style={{ gap: space.lg, padding: space.lg }}
+      >
         <header className="flex items-center justify-between">
           <div className="flex items-center" style={{ gap: space.md }}>
-            <button aria-label="Mês anterior" onClick={() => setMonth((m) => addMonths(m, -1))}>
+            <button
+              aria-label="Mês anterior"
+              onClick={() => setMonth((m) => addMonths(m, -1))}
+            >
               ←
             </button>
-            <h1 style={{ fontFamily: font.display, fontSize: 22, textTransform: "capitalize" }}>
+            <h1
+              style={{
+                fontFamily: font.display,
+                fontSize: 22,
+                textTransform: "capitalize",
+              }}
+            >
               {monthLabel}
             </h1>
-            <button aria-label="Próximo mês" onClick={() => setMonth((m) => addMonths(m, 1))}>
+            <button
+              aria-label="Próximo mês"
+              onClick={() => setMonth((m) => addMonths(m, 1))}
+            >
               →
             </button>
           </div>
-          <button style={{ color: color.textMuted }} onClick={() => sb.auth.signOut()}>
+          <button
+            style={{ color: color.textMuted }}
+            onClick={() => sb.auth.signOut()}
+          >
             sair
           </button>
         </header>
@@ -94,7 +118,10 @@ export function MonthScreen({ session }: { session: Session }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease }}
+              transition={{
+                duration: motionTokens.duration.base,
+                ease: motionTokens.ease,
+              }}
             >
               {emptyPlan && (
                 <button
@@ -110,10 +137,25 @@ export function MonthScreen({ session }: { session: Session }) {
                   Copiar plano do mês anterior
                 </button>
               )}
-              <SummaryTable summary={summary} month={month} onChanged={reload} />
-              <QuickAdd categories={data.categories} month={month} onAdded={reload} />
-              <Ledger transactions={data.transactions} categories={data.categories} onChanged={reload} />
-              <CategoryManager categories={data.categories} onChanged={reload} />
+              <SummaryTable
+                summary={summary}
+                month={month}
+                onChanged={reload}
+              />
+              <QuickAdd
+                categories={data.categories}
+                month={month}
+                onAdded={reload}
+              />
+              <Ledger
+                transactions={data.transactions}
+                categories={data.categories}
+                onChanged={reload}
+              />
+              <CategoryManager
+                categories={data.categories}
+                onChanged={reload}
+              />
               <ChatPanel month={month} session={session} />
             </motion.div>
           )}

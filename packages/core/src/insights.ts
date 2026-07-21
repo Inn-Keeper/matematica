@@ -17,7 +17,9 @@ export interface StreamInsightsOptions {
 }
 
 /** Streams assistant text chunks from the matematica-ai-api /insights/chat endpoint. */
-export async function* streamInsights(opts: StreamInsightsOptions): AsyncGenerator<string> {
+export async function* streamInsights(
+  opts: StreamInsightsOptions,
+): AsyncGenerator<string> {
   const res = await fetch(`${opts.apiUrl}/insights/chat`, {
     method: "POST",
     headers: {

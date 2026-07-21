@@ -24,14 +24,17 @@
 ### Task 1: Workspace root
 
 **Files:**
+
 - Create: `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `.gitignore`, `.npmrc`, `prettier.config.mjs`, `eslint.config.mjs`
 
 **Interfaces:**
+
 - Produces: workspace scripts `dev:web`, `dev:mobile`, `test`, `typecheck`, `lint`, `verify` used by every later task.
 
 - [ ] **Step 1: Write root config files**
 
 `pnpm-workspace.yaml`:
+
 ```yaml
 packages:
   - apps/*
@@ -39,11 +42,13 @@ packages:
 ```
 
 `.npmrc`:
+
 ```
 node-linker=hoisted
 ```
 
 `package.json`:
+
 ```json
 {
   "name": "matematica",
@@ -74,6 +79,7 @@ node-linker=hoisted
 ```
 
 `tsconfig.base.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -90,6 +96,7 @@ node-linker=hoisted
 ```
 
 `.gitignore`:
+
 ```
 node_modules/
 dist/
@@ -102,11 +109,13 @@ dist/
 ```
 
 `prettier.config.mjs`:
+
 ```js
 export default {};
 ```
 
 `eslint.config.mjs`:
+
 ```js
 import js from "@eslint/js";
 import globals from "globals";
@@ -140,14 +149,17 @@ git add -A && git commit -m "chore: workspace root scaffold"
 ### Task 2: Core package — types + tokens
 
 **Files:**
+
 - Create: `packages/core/package.json`, `packages/core/tsconfig.json`, `packages/core/src/index.ts`, `packages/core/src/types.ts`, `packages/core/src/tokens.ts`
 
 **Interfaces:**
+
 - Produces: types `Category`, `Budget`, `Transaction`, `MonthSummary`, `CategoryRow`, `Kind`; token objects `color`, `font`, `radius`, `space`, `motionTokens` — imported by every app task.
 
 - [ ] **Step 1: Write package config**
 
 `packages/core/package.json`:
+
 ```json
 {
   "name": "@matematica/core",
@@ -170,6 +182,7 @@ git add -A && git commit -m "chore: workspace root scaffold"
 ```
 
 `packages/core/tsconfig.json`:
+
 ```json
 {
   "extends": "../../tsconfig.base.json",
@@ -284,15 +297,18 @@ git add -A && git commit -m "feat(core): types and design tokens"
 ### Task 3: Core money math (TDD)
 
 **Files:**
+
 - Create: `packages/core/src/money.ts`, `packages/core/src/money.test.ts`
 - Modify: `packages/core/src/index.ts` (add `export * from "./money";`)
 
 **Interfaces:**
+
 - Produces: `formatBRL(cents: number): string`, `parseAmountToCents(input: string): number | null`.
 
 - [ ] **Step 1: Write the failing tests**
 
 `packages/core/src/money.test.ts`:
+
 ```ts
 import { describe, expect, it } from "vitest";
 import { formatBRL, parseAmountToCents } from "./money";
@@ -334,7 +350,10 @@ Expected: FAIL — cannot resolve `./money`.
 - [ ] **Step 3: Implement money.ts**
 
 ```ts
-const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const brl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
 
 export function formatBRL(cents: number): string {
   return brl.format(cents / 100);
@@ -372,38 +391,57 @@ git add -A && git commit -m "feat(core): BRL money formatting and parsing"
 ### Task 4: Core month rollup (TDD)
 
 **Files:**
+
 - Create: `packages/core/src/rollup.ts`, `packages/core/src/rollup.test.ts`, `packages/core/src/month.ts`
 - Modify: `packages/core/src/index.ts` (add exports)
 
 **Interfaces:**
+
 - Consumes: types from Task 2.
 - Produces: `summarizeMonth(categories: Category[], budgets: Budget[], transactions: Transaction[]): MonthSummary`; month utils `currentMonth(): string`, `addMonths(month: string, delta: number): string`, `monthDateRange(month: string): { start: string; end: string }` (end exclusive), `previousMonth(month: string): string`.
 
 - [ ] **Step 1: Write failing tests**
 
 `packages/core/src/rollup.test.ts`:
+
 ```ts
 import { describe, expect, it } from "vitest";
 import { summarizeMonth } from "./rollup";
 import { addMonths, monthDateRange, previousMonth } from "./month";
 import type { Budget, Category, Transaction } from "./types";
 
-const cat = (id: string, kind: "income" | "expense", archived = false): Category => ({
-  id, name: id, kind, archived,
+const cat = (
+  id: string,
+  kind: "income" | "expense",
+  archived = false,
+): Category => ({
+  id,
+  name: id,
+  kind,
+  archived,
 });
 const bud = (category_id: string, planned_cents: number): Budget => ({
-  id: `b-${category_id}`, category_id, month: "2026-07", planned_cents,
+  id: `b-${category_id}`,
+  category_id,
+  month: "2026-07",
+  planned_cents,
 });
 const tx = (category_id: string, amount_cents: number): Transaction => ({
-  id: `t-${category_id}-${amount_cents}`, category_id, date: "2026-07-10",
-  amount_cents, description: "",
+  id: `t-${category_id}-${amount_cents}`,
+  category_id,
+  date: "2026-07-10",
+  amount_cents,
+  description: "",
 });
 
 describe("summarizeMonth", () => {
   it("computes planned/actual/diff for mixed kinds", () => {
     const cats = [cat("salary", "income"), cat("food", "expense")];
-    const s = summarizeMonth(cats, [bud("salary", 800000), bud("food", 90000)],
-      [tx("salary", 800000), tx("food", 74200)]);
+    const s = summarizeMonth(
+      cats,
+      [bud("salary", 800000), bud("food", 90000)],
+      [tx("salary", 800000), tx("food", 74200)],
+    );
     const food = s.rows.find((r) => r.category.id === "food")!;
     expect(food.diffCents).toBe(15800); // under budget = favorable
     expect(s.remainingCents).toBe(800000 - 74200);
@@ -411,17 +449,29 @@ describe("summarizeMonth", () => {
   });
 
   it("income diff is actual minus planned", () => {
-    const s = summarizeMonth([cat("salary", "income")], [bud("salary", 800000)],
-      [tx("salary", 850000)]);
+    const s = summarizeMonth(
+      [cat("salary", "income")],
+      [bud("salary", 800000)],
+      [tx("salary", 850000)],
+    );
     expect(s.rows[0]!.diffCents).toBe(50000);
   });
 
   it("includes categories with a plan but no transactions, and vice versa", () => {
     const cats = [cat("rent", "expense"), cat("surprise", "expense")];
-    const s = summarizeMonth(cats, [bud("rent", 250000)], [tx("surprise", 1000)]);
-    expect(s.rows.map((r) => r.category.id).sort()).toEqual(["rent", "surprise"]);
+    const s = summarizeMonth(
+      cats,
+      [bud("rent", 250000)],
+      [tx("surprise", 1000)],
+    );
+    expect(s.rows.map((r) => r.category.id).sort()).toEqual([
+      "rent",
+      "surprise",
+    ]);
     expect(s.rows.find((r) => r.category.id === "rent")!.actualCents).toBe(0);
-    expect(s.rows.find((r) => r.category.id === "surprise")!.plannedCents).toBe(0);
+    expect(s.rows.find((r) => r.category.id === "surprise")!.plannedCents).toBe(
+      0,
+    );
   });
 
   it("empty month yields empty summary", () => {
@@ -431,7 +481,11 @@ describe("summarizeMonth", () => {
   });
 
   it("archived categories with month data still appear", () => {
-    const s = summarizeMonth([cat("old", "expense", true)], [], [tx("old", 500)]);
+    const s = summarizeMonth(
+      [cat("old", "expense", true)],
+      [],
+      [tx("old", 500)],
+    );
     expect(s.rows).toHaveLength(1);
   });
 });
@@ -445,8 +499,14 @@ describe("month utils", () => {
     expect(previousMonth("2026-07")).toBe("2026-06");
   });
   it("monthDateRange is end-exclusive", () => {
-    expect(monthDateRange("2026-07")).toEqual({ start: "2026-07-01", end: "2026-08-01" });
-    expect(monthDateRange("2026-12")).toEqual({ start: "2026-12-01", end: "2027-01-01" });
+    expect(monthDateRange("2026-07")).toEqual({
+      start: "2026-07-01",
+      end: "2026-08-01",
+    });
+    expect(monthDateRange("2026-12")).toEqual({
+      start: "2026-12-01",
+      end: "2027-01-01",
+    });
   });
 });
 ```
@@ -495,11 +555,17 @@ export function summarizeMonth(
   const byCategory = new Map(categories.map((c) => [c.id, c]));
   const planned = new Map<string, number>();
   for (const b of budgets) {
-    planned.set(b.category_id, (planned.get(b.category_id) ?? 0) + b.planned_cents);
+    planned.set(
+      b.category_id,
+      (planned.get(b.category_id) ?? 0) + b.planned_cents,
+    );
   }
   const actual = new Map<string, number>();
   for (const t of transactions) {
-    actual.set(t.category_id, (actual.get(t.category_id) ?? 0) + t.amount_cents);
+    actual.set(
+      t.category_id,
+      (actual.get(t.category_id) ?? 0) + t.amount_cents,
+    );
   }
 
   const ids = new Set([...planned.keys(), ...actual.keys()]);
@@ -510,13 +576,20 @@ export function summarizeMonth(
       const plannedCents = planned.get(category.id) ?? 0;
       const actualCents = actual.get(category.id) ?? 0;
       const diffCents =
-        category.kind === "expense" ? plannedCents - actualCents : actualCents - plannedCents;
+        category.kind === "expense"
+          ? plannedCents - actualCents
+          : actualCents - plannedCents;
       return { category, plannedCents, actualCents, diffCents };
     })
     .sort((a, b) => a.category.name.localeCompare(b.category.name));
 
-  const sum = (kind: "income" | "expense", pick: (r: (typeof rows)[number]) => number) =>
-    rows.filter((r) => r.category.kind === kind).reduce((acc, r) => acc + pick(r), 0);
+  const sum = (
+    kind: "income" | "expense",
+    pick: (r: (typeof rows)[number]) => number,
+  ) =>
+    rows
+      .filter((r) => r.category.kind === kind)
+      .reduce((acc, r) => acc + pick(r), 0);
 
   const incomeActualCents = sum("income", (r) => r.actualCents);
   const expenseActualCents = sum("expense", (r) => r.actualCents);
@@ -537,6 +610,7 @@ export function summarizeMonth(
 Run: `pnpm --filter @matematica/core test` — Expected: PASS.
 
 Add to `packages/core/src/index.ts`:
+
 ```ts
 export * from "./month";
 export * from "./rollup";
@@ -549,14 +623,17 @@ git add -A && git commit -m "feat(core): month utils and planned-vs-actual rollu
 ### Task 5: Supabase schema
 
 **Files:**
+
 - Create: `supabase/migrations/20260721000000_init.sql`, `supabase/config.toml` (via CLI if available, else migration only)
 
 **Interfaces:**
+
 - Produces: tables `categories`, `budgets`, `transactions` with RLS — consumed by core data layer and the AI API.
 
 - [ ] **Step 1: Write the migration**
 
 `supabase/migrations/20260721000000_init.sql`:
+
 ```sql
 create table public.categories (
   id uuid primary key default gen_random_uuid(),
@@ -616,10 +693,12 @@ git add -A && git commit -m "feat(db): initial schema with RLS"
 ### Task 6: Core data layer + insights client
 
 **Files:**
+
 - Create: `packages/core/src/data.ts`, `packages/core/src/insights.ts`, `packages/core/src/insights.test.ts`
 - Modify: `packages/core/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `SupabaseClient` from `@supabase/supabase-js`; types + month utils.
 - Produces (used by both apps):
   - `fetchMonthData(sb, month): Promise<{ categories: Category[]; budgets: Budget[]; transactions: Transaction[] }>`
@@ -636,14 +715,16 @@ git add -A && git commit -m "feat(db): initial schema with RLS"
 - [ ] **Step 1: Write failing test for SSE parsing**
 
 `packages/core/src/insights.test.ts`:
+
 ```ts
 import { describe, expect, it } from "vitest";
 import { parseSseData } from "./insights";
 
 describe("parseSseData", () => {
   it("extracts data payloads from SSE text", () => {
-    expect(parseSseData('data: {"text": "olá"}\n\ndata: {"text": " mundo"}\n\n'))
-      .toEqual(['{"text": "olá"}', '{"text": " mundo"}']);
+    expect(
+      parseSseData('data: {"text": "olá"}\n\ndata: {"text": " mundo"}\n\n'),
+    ).toEqual(['{"text": "olá"}', '{"text": " mundo"}']);
   });
   it("ignores comments, blank lines and [DONE]", () => {
     expect(parseSseData(": ping\n\ndata: [DONE]\n\n")).toEqual([]);
@@ -675,7 +756,9 @@ export interface StreamInsightsOptions {
 }
 
 /** Streams assistant text chunks from the matematica-ai-api /insights/chat endpoint. */
-export async function* streamInsights(opts: StreamInsightsOptions): AsyncGenerator<string> {
+export async function* streamInsights(
+  opts: StreamInsightsOptions,
+): AsyncGenerator<string> {
   const res = await fetch(`${opts.apiUrl}/insights/chat`, {
     method: "POST",
     headers: {
@@ -724,7 +807,10 @@ import { monthDateRange, previousMonth } from "./month";
 import type { Budget, Category, Kind, Transaction } from "./types";
 
 // Every function throws on Supabase error — callers surface it in the UI.
-function unwrap<T>(result: { data: T | null; error: { message: string } | null }): T {
+function unwrap<T>(result: {
+  data: T | null;
+  error: { message: string } | null;
+}): T {
   if (result.error) throw new Error(result.error.message);
   if (result.data === null) throw new Error("Resposta vazia do Supabase.");
   return result.data;
@@ -734,7 +820,10 @@ export async function fetchMonthData(sb: SupabaseClient, month: string) {
   const { start, end } = monthDateRange(month);
   const [categories, budgets, transactions] = await Promise.all([
     sb.from("categories").select("id,name,kind,archived").order("name"),
-    sb.from("budgets").select("id,category_id,month,planned_cents").eq("month", month),
+    sb
+      .from("budgets")
+      .select("id,category_id,month,planned_cents")
+      .eq("month", month),
     sb
       .from("transactions")
       .select("id,category_id,date,amount_cents,description")
@@ -751,10 +840,20 @@ export async function fetchMonthData(sb: SupabaseClient, month: string) {
 
 export async function addTransaction(
   sb: SupabaseClient,
-  input: { category_id: string; date: string; amount_cents: number; description: string },
+  input: {
+    category_id: string;
+    date: string;
+    amount_cents: number;
+    description: string;
+  },
 ) {
   const user = unwrap(await sb.auth.getUser()).user;
-  unwrap(await sb.from("transactions").insert({ ...input, user_id: user.id }).select());
+  unwrap(
+    await sb
+      .from("transactions")
+      .insert({ ...input, user_id: user.id })
+      .select(),
+  );
 }
 
 export async function deleteTransaction(sb: SupabaseClient, id: string) {
@@ -769,26 +868,50 @@ export async function upsertBudget(
   unwrap(
     await sb
       .from("budgets")
-      .upsert({ ...input, user_id: user.id }, { onConflict: "user_id,category_id,month" })
+      .upsert(
+        { ...input, user_id: user.id },
+        { onConflict: "user_id,category_id,month" },
+      )
       .select(),
   );
 }
 
-export async function addCategory(sb: SupabaseClient, input: { name: string; kind: Kind }) {
+export async function addCategory(
+  sb: SupabaseClient,
+  input: { name: string; kind: Kind },
+) {
   const user = unwrap(await sb.auth.getUser()).user;
-  unwrap(await sb.from("categories").insert({ ...input, user_id: user.id }).select());
+  unwrap(
+    await sb
+      .from("categories")
+      .insert({ ...input, user_id: user.id })
+      .select(),
+  );
 }
 
-export async function renameCategory(sb: SupabaseClient, id: string, name: string) {
+export async function renameCategory(
+  sb: SupabaseClient,
+  id: string,
+  name: string,
+) {
   unwrap(await sb.from("categories").update({ name }).eq("id", id).select());
 }
 
-export async function setCategoryArchived(sb: SupabaseClient, id: string, archived: boolean) {
-  unwrap(await sb.from("categories").update({ archived }).eq("id", id).select());
+export async function setCategoryArchived(
+  sb: SupabaseClient,
+  id: string,
+  archived: boolean,
+) {
+  unwrap(
+    await sb.from("categories").update({ archived }).eq("id", id).select(),
+  );
 }
 
 /** Copies the previous month's budget rows into `month`. Returns rows copied. */
-export async function copyPlanFromPreviousMonth(sb: SupabaseClient, month: string) {
+export async function copyPlanFromPreviousMonth(
+  sb: SupabaseClient,
+  month: string,
+) {
   const prev = unwrap(
     await sb
       .from("budgets")
@@ -813,6 +936,7 @@ export async function copyPlanFromPreviousMonth(sb: SupabaseClient, month: strin
 - [ ] **Step 4: Export, verify, commit**
 
 Add to `packages/core/src/index.ts`:
+
 ```ts
 export * from "./data";
 export * from "./insights";
@@ -828,15 +952,18 @@ git add -A && git commit -m "feat(core): supabase data layer and insights SSE cl
 ### Task 7: Web app scaffold + auth
 
 **Files:**
+
 - Create: `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/vite.config.ts`, `apps/web/index.html`, `apps/web/src/main.tsx`, `apps/web/src/App.tsx`, `apps/web/src/index.css`, `apps/web/src/lib/supabase.ts`, `apps/web/src/screens/AuthScreen.tsx`, `apps/web/.env.example`
 
 **Interfaces:**
+
 - Consumes: tokens from core.
 - Produces: `useSession()`-style auth gate in `App.tsx`; `sb` singleton from `lib/supabase.ts` — used by Tasks 8–9.
 
 - [ ] **Step 1: Write app config**
 
 `apps/web/package.json`:
+
 ```json
 {
   "name": "web",
@@ -868,6 +995,7 @@ git add -A && git commit -m "feat(core): supabase data layer and insights SSE cl
 ```
 
 `apps/web/vite.config.ts`:
+
 ```ts
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -877,15 +1005,20 @@ export default defineConfig({ plugins: [react(), tailwindcss()] });
 ```
 
 `apps/web/tsconfig.json`:
+
 ```json
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "lib": ["ES2022", "DOM", "DOM.Iterable"], "noEmit": true },
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true
+  },
   "include": ["src"]
 }
 ```
 
 `apps/web/index.html`:
+
 ```html
 <!doctype html>
 <html lang="pt-BR">
@@ -907,11 +1040,13 @@ export default defineConfig({ plugins: [react(), tailwindcss()] });
 ```
 
 `apps/web/src/index.css`:
+
 ```css
 @import "tailwindcss";
 ```
 
 `apps/web/.env.example`:
+
 ```
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
@@ -921,6 +1056,7 @@ VITE_AI_API_URL=http://localhost:8000
 - [ ] **Step 2: Write supabase client + auth gate**
 
 `apps/web/src/lib/supabase.ts`:
+
 ```ts
 import { createClient } from "@supabase/supabase-js";
 
@@ -931,6 +1067,7 @@ export const sb = createClient(
 ```
 
 `apps/web/src/screens/AuthScreen.tsx`:
+
 ```tsx
 import { color, font, radius, space } from "@matematica/core";
 import { useState } from "react";
@@ -949,16 +1086,27 @@ export function AuthScreen() {
   return (
     <main
       className="flex min-h-screen items-center justify-center"
-      style={{ background: color.screen, fontFamily: font.body, color: color.text }}
+      style={{
+        background: color.screen,
+        fontFamily: font.body,
+        color: color.text,
+      }}
     >
       <form
         onSubmit={sendLink}
         className="flex w-80 flex-col"
-        style={{ gap: space.md, background: color.card, borderRadius: radius.card, padding: space.lg }}
+        style={{
+          gap: space.md,
+          background: color.card,
+          borderRadius: radius.card,
+          padding: space.lg,
+        }}
       >
         <h1 style={{ fontFamily: font.display, fontSize: 24 }}>matematica</h1>
         {status === "sent" ? (
-          <p style={{ color: color.textSecondary }}>Link enviado. Confira seu e-mail.</p>
+          <p style={{ color: color.textSecondary }}>
+            Link enviado. Confira seu e-mail.
+          </p>
         ) : (
           <>
             <input
@@ -969,20 +1117,27 @@ export function AuthScreen() {
               placeholder="seu@email.com"
               className="w-full"
               style={{
-                background: color.cardAlt, borderRadius: radius.control,
-                padding: `${space.sm}px ${space.md}px`, border: `1px solid ${color.hairline}`,
+                background: color.cardAlt,
+                borderRadius: radius.control,
+                padding: `${space.sm}px ${space.md}px`,
+                border: `1px solid ${color.hairline}`,
               }}
             />
             <button
               type="submit"
               style={{
-                background: color.brand, color: color.screen,
-                borderRadius: radius.control, padding: space.sm, fontWeight: 700,
+                background: color.brand,
+                color: color.screen,
+                borderRadius: radius.control,
+                padding: space.sm,
+                fontWeight: 700,
               }}
             >
               Entrar
             </button>
-            {status !== "idle" && <p style={{ color: color.expense }}>{status}</p>}
+            {status !== "idle" && (
+              <p style={{ color: color.expense }}>{status}</p>
+            )}
           </>
         )}
       </form>
@@ -992,6 +1147,7 @@ export function AuthScreen() {
 ```
 
 `apps/web/src/App.tsx`:
+
 ```tsx
 import type { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
@@ -1018,6 +1174,7 @@ export default function App() {
 ```
 
 `apps/web/src/main.tsx`:
+
 ```tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -1034,6 +1191,7 @@ createRoot(document.getElementById("root")!).render(
 Note: `MonthScreen` arrives in Task 8 — create a placeholder now so the build passes:
 
 `apps/web/src/screens/MonthScreen.tsx` (placeholder, replaced in Task 8):
+
 ```tsx
 import type { Session } from "@supabase/supabase-js";
 
@@ -1054,21 +1212,33 @@ git add -A && git commit -m "feat(web): vite scaffold with magic-link auth"
 ### Task 8: Web month screen
 
 **Files:**
+
 - Modify: `apps/web/src/screens/MonthScreen.tsx` (replace placeholder)
 - Create: `apps/web/src/components/SummaryTable.tsx`, `apps/web/src/components/Ledger.tsx`, `apps/web/src/components/QuickAdd.tsx`, `apps/web/src/components/CategoryManager.tsx`
 
 **Interfaces:**
+
 - Consumes: core `fetchMonthData`, `summarizeMonth`, `formatBRL`, `parseAmountToCents`, `addTransaction`, `deleteTransaction`, `upsertBudget`, `copyPlanFromPreviousMonth`, `addCategory`, `renameCategory`, `setCategoryArchived`, month utils, tokens, `motionTokens`; `sb` from Task 7.
 - Produces: `MonthScreen({ session })` — already wired into `App.tsx`.
 
 - [ ] **Step 1: Implement MonthScreen container**
 
 `apps/web/src/screens/MonthScreen.tsx`:
+
 ```tsx
 import {
-  addMonths, color, copyPlanFromPreviousMonth, currentMonth, fetchMonthData,
-  font, motionTokens, space, summarizeMonth,
-  type Budget, type Category, type Transaction,
+  addMonths,
+  color,
+  copyPlanFromPreviousMonth,
+  currentMonth,
+  fetchMonthData,
+  font,
+  motionTokens,
+  space,
+  summarizeMonth,
+  type Budget,
+  type Category,
+  type Transaction,
 } from "@matematica/core";
 import type { Session } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "motion/react";
@@ -1101,7 +1271,9 @@ export function MonthScreen({ session }: { session: Session }) {
     reload();
   }, [reload]);
 
-  const summary = data ? summarizeMonth(data.categories, data.budgets, data.transactions) : null;
+  const summary = data
+    ? summarizeMonth(data.categories, data.budgets, data.transactions)
+    : null;
   const emptyPlan = data !== null && data.budgets.length === 0;
 
   async function copyPlan() {
@@ -1114,24 +1286,53 @@ export function MonthScreen({ session }: { session: Session }) {
   }
 
   const monthLabel = new Date(`${month}-15`).toLocaleDateString("pt-BR", {
-    month: "long", year: "numeric",
+    month: "long",
+    year: "numeric",
   });
 
   return (
     <main
       className="min-h-screen"
-      style={{ background: color.screen, color: color.text, fontFamily: font.body }}
+      style={{
+        background: color.screen,
+        color: color.text,
+        fontFamily: font.body,
+      }}
     >
-      <div className="mx-auto flex max-w-3xl flex-col" style={{ gap: space.lg, padding: space.lg }}>
+      <div
+        className="mx-auto flex max-w-3xl flex-col"
+        style={{ gap: space.lg, padding: space.lg }}
+      >
         <header className="flex items-center justify-between">
           <div className="flex items-center" style={{ gap: space.md }}>
-            <button aria-label="Mês anterior" onClick={() => setMonth((m) => addMonths(m, -1))}>←</button>
-            <h1 style={{ fontFamily: font.display, fontSize: 22, textTransform: "capitalize" }}>
+            <button
+              aria-label="Mês anterior"
+              onClick={() => setMonth((m) => addMonths(m, -1))}
+            >
+              ←
+            </button>
+            <h1
+              style={{
+                fontFamily: font.display,
+                fontSize: 22,
+                textTransform: "capitalize",
+              }}
+            >
               {monthLabel}
             </h1>
-            <button aria-label="Próximo mês" onClick={() => setMonth((m) => addMonths(m, 1))}>→</button>
+            <button
+              aria-label="Próximo mês"
+              onClick={() => setMonth((m) => addMonths(m, 1))}
+            >
+              →
+            </button>
           </div>
-          <button style={{ color: color.textMuted }} onClick={() => sb.auth.signOut()}>sair</button>
+          <button
+            style={{ color: color.textMuted }}
+            onClick={() => sb.auth.signOut()}
+          >
+            sair
+          </button>
         </header>
 
         {error && <p style={{ color: color.expense }}>{error}</p>}
@@ -1145,23 +1346,44 @@ export function MonthScreen({ session }: { session: Session }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease }}
+              transition={{
+                duration: motionTokens.duration.base,
+                ease: motionTokens.ease,
+              }}
             >
               {emptyPlan && (
                 <button
                   onClick={copyPlan}
                   style={{
-                    background: color.brandSoft, color: color.brand,
-                    borderRadius: 10, padding: space.sm, fontWeight: 500,
+                    background: color.brandSoft,
+                    color: color.brand,
+                    borderRadius: 10,
+                    padding: space.sm,
+                    fontWeight: 500,
                   }}
                 >
                   Copiar plano do mês anterior
                 </button>
               )}
-              <SummaryTable summary={summary} month={month} onChanged={reload} />
-              <QuickAdd categories={data.categories} month={month} onAdded={reload} />
-              <Ledger transactions={data.transactions} categories={data.categories} onChanged={reload} />
-              <CategoryManager categories={data.categories} onChanged={reload} />
+              <SummaryTable
+                summary={summary}
+                month={month}
+                onChanged={reload}
+              />
+              <QuickAdd
+                categories={data.categories}
+                month={month}
+                onAdded={reload}
+              />
+              <Ledger
+                transactions={data.transactions}
+                categories={data.categories}
+                onChanged={reload}
+              />
+              <CategoryManager
+                categories={data.categories}
+                onChanged={reload}
+              />
               <ChatPanel month={month} session={session} />
             </motion.div>
           )}
@@ -1175,16 +1397,24 @@ export function MonthScreen({ session }: { session: Session }) {
 - [ ] **Step 2: Implement SummaryTable (planned editable inline)**
 
 `apps/web/src/components/SummaryTable.tsx`:
+
 ```tsx
 import {
-  color, font, formatBRL, parseAmountToCents, radius, space, upsertBudget,
+  color,
+  font,
+  formatBRL,
+  parseAmountToCents,
+  radius,
+  space,
+  upsertBudget,
   type MonthSummary,
 } from "@matematica/core";
 import { useState } from "react";
 import { sb } from "../lib/supabase";
 
 function DiffCell({ cents }: { cents: number }) {
-  const tone = cents === 0 ? color.textMuted : cents > 0 ? color.income : color.expense;
+  const tone =
+    cents === 0 ? color.textMuted : cents > 0 ? color.income : color.expense;
   return (
     <td className="text-right" style={{ color: tone, fontFamily: font.mono }}>
       {cents > 0 ? "+" : ""}
@@ -1194,8 +1424,14 @@ function DiffCell({ cents }: { cents: number }) {
 }
 
 export function SummaryTable({
-  summary, month, onChanged,
-}: { summary: MonthSummary; month: string; onChanged: () => void }) {
+  summary,
+  month,
+  onChanged,
+}: {
+  summary: MonthSummary;
+  month: string;
+  onChanged: () => void;
+}) {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -1207,7 +1443,11 @@ export function SummaryTable({
       return;
     }
     try {
-      await upsertBudget(sb, { category_id: categoryId, month, planned_cents: cents });
+      await upsertBudget(sb, {
+        category_id: categoryId,
+        month,
+        planned_cents: cents,
+      });
       setEditing(null);
       setError(null);
       onChanged();
@@ -1217,11 +1457,19 @@ export function SummaryTable({
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
       <table className="w-full" style={{ fontSize: 14 }}>
         <thead>
           <tr style={{ color: color.textMuted, textAlign: "right" }}>
-            <th className="text-left" style={{ fontWeight: 500 }}>Categoria</th>
+            <th className="text-left" style={{ fontWeight: 500 }}>
+              Categoria
+            </th>
             <th style={{ fontWeight: 500 }}>Planejado</th>
             <th style={{ fontWeight: 500 }}>Real</th>
             <th style={{ fontWeight: 500 }}>Dif.</th>
@@ -1229,11 +1477,22 @@ export function SummaryTable({
         </thead>
         <tbody>
           {summary.rows.map((row) => (
-            <tr key={row.category.id} style={{ borderTop: `1px solid ${color.hairline}` }}>
+            <tr
+              key={row.category.id}
+              style={{ borderTop: `1px solid ${color.hairline}` }}
+            >
               <td style={{ padding: `${space.sm}px 0` }}>
                 {row.category.name}
                 {row.category.kind === "income" && (
-                  <span style={{ color: color.income, marginLeft: space.sm, fontSize: 11 }}>renda</span>
+                  <span
+                    style={{
+                      color: color.income,
+                      marginLeft: space.sm,
+                      fontSize: 11,
+                    }}
+                  >
+                    renda
+                  </span>
                 )}
               </td>
               <td
@@ -1241,7 +1500,9 @@ export function SummaryTable({
                 style={{ fontFamily: font.mono }}
                 onClick={() => {
                   setEditing(row.category.id);
-                  setDraft((row.plannedCents / 100).toFixed(2).replace(".", ","));
+                  setDraft(
+                    (row.plannedCents / 100).toFixed(2).replace(".", ","),
+                  );
                 }}
               >
                 {editing === row.category.id ? (
@@ -1250,9 +1511,15 @@ export function SummaryTable({
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onBlur={() => savePlanned(row.category.id)}
-                    onKeyDown={(e) => e.key === "Enter" && savePlanned(row.category.id)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && savePlanned(row.category.id)
+                    }
                     className="w-24 text-right"
-                    style={{ background: color.cardAlt, borderRadius: 6, fontFamily: font.mono }}
+                    style={{
+                      background: color.cardAlt,
+                      borderRadius: 6,
+                      fontFamily: font.mono,
+                    }}
                   />
                 ) : (
                   formatBRL(row.plannedCents)
@@ -1266,7 +1533,12 @@ export function SummaryTable({
           ))}
         </tbody>
         <tfoot>
-          <tr style={{ borderTop: `1px solid ${color.hairline}`, fontWeight: 700 }}>
+          <tr
+            style={{
+              borderTop: `1px solid ${color.hairline}`,
+              fontWeight: 700,
+            }}
+          >
             <td style={{ padding: `${space.sm}px 0` }}>Saldo do mês</td>
             <td />
             <td />
@@ -1274,7 +1546,8 @@ export function SummaryTable({
               className="text-right"
               style={{
                 fontFamily: font.mono,
-                color: summary.remainingCents >= 0 ? color.income : color.expense,
+                color:
+                  summary.remainingCents >= 0 ? color.income : color.expense,
               }}
             >
               {formatBRL(summary.remainingCents)}
@@ -1282,7 +1555,9 @@ export function SummaryTable({
           </tr>
         </tfoot>
       </table>
-      {error && <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>}
+      {error && (
+        <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>
+      )}
     </section>
   );
 }
@@ -1291,19 +1566,33 @@ export function SummaryTable({
 - [ ] **Step 3: Implement QuickAdd, Ledger, CategoryManager**
 
 `apps/web/src/components/QuickAdd.tsx`:
+
 ```tsx
 import {
-  addTransaction, color, parseAmountToCents, radius, space, type Category,
+  addTransaction,
+  color,
+  parseAmountToCents,
+  radius,
+  space,
+  type Category,
 } from "@matematica/core";
 import { useState } from "react";
 import { sb } from "../lib/supabase";
 
 export function QuickAdd({
-  categories, month, onAdded,
-}: { categories: Category[]; month: string; onAdded: () => void }) {
+  categories,
+  month,
+  onAdded,
+}: {
+  categories: Category[];
+  month: string;
+  onAdded: () => void;
+}) {
   const active = categories.filter((c) => !c.archived);
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(today.startsWith(month) ? today : `${month}-01`);
+  const [date, setDate] = useState(
+    today.startsWith(month) ? today : `${month}-01`,
+  );
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -1315,7 +1604,12 @@ export function QuickAdd({
     if (cents === null || cents === 0) return setError("Valor inválido");
     if (!categoryId) return setError("Escolha uma categoria");
     try {
-      await addTransaction(sb, { category_id: categoryId, date, amount_cents: cents, description });
+      await addTransaction(sb, {
+        category_id: categoryId,
+        date,
+        amount_cents: cents,
+        description,
+      });
       setAmount("");
       setDescription("");
       setError(null);
@@ -1326,50 +1620,107 @@ export function QuickAdd({
   }
 
   const field = {
-    background: color.cardAlt, borderRadius: radius.control,
-    padding: `${space.sm}px ${space.md}px`, border: `1px solid ${color.hairline}`,
+    background: color.cardAlt,
+    borderRadius: radius.control,
+    padding: `${space.sm}px ${space.md}px`,
+    border: `1px solid ${color.hairline}`,
   } as const;
 
   return (
     <form
       onSubmit={submit}
       className="flex flex-wrap items-center"
-      style={{ gap: space.sm, background: color.card, borderRadius: radius.card, padding: space.md }}
+      style={{
+        gap: space.sm,
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
     >
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required style={field} />
-      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required style={field}>
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        required
+        style={field}
+      />
+      <select
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+        required
+        style={field}
+      >
         <option value="">categoria…</option>
         {active.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
         ))}
       </select>
-      <input placeholder="valor" value={amount} onChange={(e) => setAmount(e.target.value)} required className="w-24" style={field} />
-      <input placeholder="descrição" value={description} onChange={(e) => setDescription(e.target.value)} className="flex-1" style={field} />
+      <input
+        placeholder="valor"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        required
+        className="w-24"
+        style={field}
+      />
+      <input
+        placeholder="descrição"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="flex-1"
+        style={field}
+      />
       <button
         type="submit"
-        style={{ background: color.brand, color: color.screen, borderRadius: radius.control, padding: `${space.sm}px ${space.md}px`, fontWeight: 700 }}
+        style={{
+          background: color.brand,
+          color: color.screen,
+          borderRadius: radius.control,
+          padding: `${space.sm}px ${space.md}px`,
+          fontWeight: 700,
+        }}
       >
         +
       </button>
-      {error && <p className="w-full" style={{ color: color.expense }}>{error}</p>}
+      {error && (
+        <p className="w-full" style={{ color: color.expense }}>
+          {error}
+        </p>
+      )}
     </form>
   );
 }
 ```
 
 `apps/web/src/components/Ledger.tsx`:
+
 ```tsx
 import {
-  color, deleteTransaction, font, formatBRL, motionTokens, radius, space,
-  type Category, type Transaction,
+  color,
+  deleteTransaction,
+  font,
+  formatBRL,
+  motionTokens,
+  radius,
+  space,
+  type Category,
+  type Transaction,
 } from "@matematica/core";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { sb } from "../lib/supabase";
 
 export function Ledger({
-  transactions, categories, onChanged,
-}: { transactions: Transaction[]; categories: Category[]; onChanged: () => void }) {
+  transactions,
+  categories,
+  onChanged,
+}: {
+  transactions: Transaction[];
+  categories: Category[];
+  onChanged: () => void;
+}) {
   const [error, setError] = useState<string | null>(null);
   const byId = new Map(categories.map((c) => [c.id, c]));
 
@@ -1383,11 +1734,19 @@ export function Ledger({
   }
 
   if (transactions.length === 0) {
-    return <p style={{ color: color.textMuted }}>Nenhum lançamento neste mês.</p>;
+    return (
+      <p style={{ color: color.textMuted }}>Nenhum lançamento neste mês.</p>
+    );
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
       {error && <p style={{ color: color.expense }}>{error}</p>}
       <ul>
         <AnimatePresence initial={false}>
@@ -1398,22 +1757,45 @@ export function Ledger({
               <motion.li
                 key={t.id}
                 className="group flex items-center justify-between"
-                style={{ padding: `${space.sm}px 0`, borderTop: `1px solid ${color.hairline}` }}
+                style={{
+                  padding: `${space.sm}px 0`,
+                  borderTop: `1px solid ${color.hairline}`,
+                }}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: motionTokens.duration.fast, ease: motionTokens.ease }}
+                transition={{
+                  duration: motionTokens.duration.fast,
+                  ease: motionTokens.ease,
+                }}
               >
-                <span style={{ color: color.textMuted, fontFamily: font.mono, fontSize: 12 }}>
+                <span
+                  style={{
+                    color: color.textMuted,
+                    fontFamily: font.mono,
+                    fontSize: 12,
+                  }}
+                >
                   {t.date.slice(8, 10)}/{t.date.slice(5, 7)}
                 </span>
                 <span className="flex-1" style={{ marginLeft: space.md }}>
                   {t.description || cat?.name || "—"}
-                  <span style={{ color: color.textMuted, marginLeft: space.sm, fontSize: 12 }}>
+                  <span
+                    style={{
+                      color: color.textMuted,
+                      marginLeft: space.sm,
+                      fontSize: 12,
+                    }}
+                  >
                     {cat?.name}
                   </span>
                 </span>
-                <span style={{ fontFamily: font.mono, color: isIncome ? color.income : color.text }}>
+                <span
+                  style={{
+                    fontFamily: font.mono,
+                    color: isIncome ? color.income : color.text,
+                  }}
+                >
                   {isIncome ? "+" : "−"}
                   {formatBRL(t.amount_cents)}
                 </span>
@@ -1436,17 +1818,28 @@ export function Ledger({
 ```
 
 `apps/web/src/components/CategoryManager.tsx`:
+
 ```tsx
 import {
-  addCategory, color, radius, renameCategory, setCategoryArchived, space,
-  type Category, type Kind,
+  addCategory,
+  color,
+  radius,
+  renameCategory,
+  setCategoryArchived,
+  space,
+  type Category,
+  type Kind,
 } from "@matematica/core";
 import { useState } from "react";
 import { sb } from "../lib/supabase";
 
 export function CategoryManager({
-  categories, onChanged,
-}: { categories: Category[]; onChanged: () => void }) {
+  categories,
+  onChanged,
+}: {
+  categories: Category[];
+  onChanged: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [kind, setKind] = useState<Kind>("expense");
@@ -1464,31 +1857,60 @@ export function CategoryManager({
 
   if (!open) {
     return (
-      <button className="self-start" style={{ color: color.textMuted }} onClick={() => setOpen(true)}>
+      <button
+        className="self-start"
+        style={{ color: color.textMuted }}
+        onClick={() => setOpen(true)}
+      >
         gerenciar categorias
       </button>
     );
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
       <div className="flex items-center justify-between">
         <h2 style={{ fontWeight: 700 }}>Categorias</h2>
-        <button style={{ color: color.textMuted }} onClick={() => setOpen(false)}>fechar</button>
+        <button
+          style={{ color: color.textMuted }}
+          onClick={() => setOpen(false)}
+        >
+          fechar
+        </button>
       </div>
       {error && <p style={{ color: color.expense }}>{error}</p>}
       <ul style={{ marginTop: space.sm }}>
         {categories.map((c) => (
-          <li key={c.id} className="flex items-center justify-between" style={{ padding: `${space.xs}px 0` }}>
+          <li
+            key={c.id}
+            className="flex items-center justify-between"
+            style={{ padding: `${space.xs}px 0` }}
+          >
             <input
               defaultValue={c.name}
-              onBlur={(e) => e.target.value !== c.name && run(() => renameCategory(sb, c.id, e.target.value))}
-              style={{ background: "transparent", opacity: c.archived ? 0.4 : 1 }}
+              onBlur={(e) =>
+                e.target.value !== c.name &&
+                run(() => renameCategory(sb, c.id, e.target.value))
+              }
+              style={{
+                background: "transparent",
+                opacity: c.archived ? 0.4 : 1,
+              }}
             />
-            <span style={{ color: color.textMuted, fontSize: 12 }}>{c.kind === "income" ? "renda" : "despesa"}</span>
+            <span style={{ color: color.textMuted, fontSize: 12 }}>
+              {c.kind === "income" ? "renda" : "despesa"}
+            </span>
             <button
               style={{ color: color.textMuted, marginLeft: space.md }}
-              onClick={() => run(() => setCategoryArchived(sb, c.id, !c.archived))}
+              onClick={() =>
+                run(() => setCategoryArchived(sb, c.id, !c.archived))
+              }
             >
               {c.archived ? "restaurar" : "arquivar"}
             </button>
@@ -1501,20 +1923,36 @@ export function CategoryManager({
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          run(() => addCategory(sb, { name: name.trim(), kind })).then(() => setName(""));
+          run(() => addCategory(sb, { name: name.trim(), kind })).then(() =>
+            setName(""),
+          );
         }}
       >
         <input
           placeholder="nova categoria"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ background: color.cardAlt, borderRadius: radius.control, padding: `${space.xs}px ${space.sm}px` }}
+          style={{
+            background: color.cardAlt,
+            borderRadius: radius.control,
+            padding: `${space.xs}px ${space.sm}px`,
+          }}
         />
-        <select value={kind} onChange={(e) => setKind(e.target.value as Kind)} style={{ background: color.cardAlt, borderRadius: radius.control, padding: space.xs }}>
+        <select
+          value={kind}
+          onChange={(e) => setKind(e.target.value as Kind)}
+          style={{
+            background: color.cardAlt,
+            borderRadius: radius.control,
+            padding: space.xs,
+          }}
+        >
           <option value="expense">despesa</option>
           <option value="income">renda</option>
         </select>
-        <button type="submit" style={{ color: color.brand, fontWeight: 700 }}>adicionar</button>
+        <button type="submit" style={{ color: color.brand, fontWeight: 700 }}>
+          adicionar
+        </button>
       </form>
     </section>
   );
@@ -1526,6 +1964,7 @@ export function CategoryManager({
 Run: `pnpm --filter web build` — Expected: fails only on missing `ChatPanel` → create the Task 9 placeholder now:
 
 `apps/web/src/components/ChatPanel.tsx` (placeholder, replaced in Task 9):
+
 ```tsx
 import type { Session } from "@supabase/supabase-js";
 
@@ -1543,22 +1982,36 @@ git add -A && git commit -m "feat(web): month screen with summary, ledger, quick
 ### Task 9: Web chat panel
 
 **Files:**
+
 - Modify: `apps/web/src/components/ChatPanel.tsx` (replace placeholder)
 
 **Interfaces:**
+
 - Consumes: `streamInsights`, `ChatMessage` from core; `session.access_token`; env `VITE_AI_API_URL`.
 
 - [ ] **Step 1: Implement ChatPanel**
 
 ```tsx
 import {
-  color, font, motionTokens, radius, space, streamInsights, type ChatMessage,
+  color,
+  font,
+  motionTokens,
+  radius,
+  space,
+  streamInsights,
+  type ChatMessage,
 } from "@matematica/core";
 import type { Session } from "@supabase/supabase-js";
 import { motion } from "motion/react";
 import { useState } from "react";
 
-export function ChatPanel({ month, session }: { month: string; session: Session }) {
+export function ChatPanel({
+  month,
+  session,
+}: {
+  month: string;
+  session: Session;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1568,7 +2021,10 @@ export function ChatPanel({ month, session }: { month: string; session: Session 
     e.preventDefault();
     const question = input.trim();
     if (!question || busy) return;
-    const history: ChatMessage[] = [...messages, { role: "user", text: question }];
+    const history: ChatMessage[] = [
+      ...messages,
+      { role: "user", text: question },
+    ];
     setMessages([...history, { role: "assistant", text: "" }]);
     setInput("");
     setBusy(true);
@@ -1593,8 +2049,20 @@ export function ChatPanel({ month, session }: { month: string; session: Session 
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
-      <h2 style={{ fontFamily: font.display, fontSize: 16, marginBottom: space.sm }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: font.display,
+          fontSize: 16,
+          marginBottom: space.sm,
+        }}
+      >
         Assistente do mês
       </h2>
       <div className="flex flex-col" style={{ gap: space.sm }}>
@@ -1618,23 +2086,35 @@ export function ChatPanel({ month, session }: { month: string; session: Session 
           </motion.p>
         ))}
       </div>
-      {error && <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>}
-      <form onSubmit={send} className="flex" style={{ gap: space.sm, marginTop: space.md }}>
+      {error && (
+        <p style={{ color: color.expense, marginTop: space.sm }}>{error}</p>
+      )}
+      <form
+        onSubmit={send}
+        className="flex"
+        style={{ gap: space.sm, marginTop: space.md }}
+      >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Pergunte sobre este mês…"
           className="flex-1"
           style={{
-            background: color.cardAlt, borderRadius: radius.control,
-            padding: `${space.sm}px ${space.md}px`, border: `1px solid ${color.hairline}`,
+            background: color.cardAlt,
+            borderRadius: radius.control,
+            padding: `${space.sm}px ${space.md}px`,
+            border: `1px solid ${color.hairline}`,
           }}
         />
         <button
           disabled={busy}
           style={{
-            background: color.brand, color: color.screen, borderRadius: radius.control,
-            padding: `${space.sm}px ${space.md}px`, fontWeight: 700, opacity: busy ? 0.5 : 1,
+            background: color.brand,
+            color: color.screen,
+            borderRadius: radius.control,
+            padding: `${space.sm}px ${space.md}px`,
+            fontWeight: 700,
+            opacity: busy ? 0.5 : 1,
           }}
         >
           →
@@ -1656,17 +2136,21 @@ git add -A && git commit -m "feat(web): streaming AI insights chat panel"
 ### Task 10: Mobile app
 
 **Files:**
+
 - Create: `apps/mobile/package.json`, `apps/mobile/tsconfig.json`, `apps/mobile/app.json`, `apps/mobile/babel.config.js`, `apps/mobile/app/_layout.tsx`, `apps/mobile/app/index.tsx`, `apps/mobile/lib/supabase.ts`, `apps/mobile/.env.example`
 
 **Interfaces:**
+
 - Consumes: everything core exports; env `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_AI_API_URL`.
 
 - [ ] **Step 1: Scaffold with create-expo-app**
 
 Run from repo root:
+
 ```bash
 pnpm create expo-app@latest apps/mobile --template default --no-install
 ```
+
 Then edit `apps/mobile/package.json`: set `"name": "mobile"`, add
 `"@matematica/core": "workspace:*"` and `"@supabase/supabase-js": "^2.49.0"`
 to dependencies, add `"typecheck": "tsc --noEmit"` to scripts. Delete the
@@ -1676,6 +2160,7 @@ template's example screens/components (keep `app/`, assets, config). Run
 - [ ] **Step 2: Write supabase client**
 
 `apps/mobile/lib/supabase.ts`:
+
 ```ts
 import { createClient } from "@supabase/supabase-js";
 
@@ -1686,6 +2171,7 @@ export const sb = createClient(
 ```
 
 `apps/mobile/.env.example`:
+
 ```
 EXPO_PUBLIC_SUPABASE_URL=
 EXPO_PUBLIC_SUPABASE_ANON_KEY=
@@ -1695,6 +2181,7 @@ EXPO_PUBLIC_AI_API_URL=http://localhost:8000
 - [ ] **Step 3: Write layout with auth gate**
 
 `apps/mobile/app/_layout.tsx`:
+
 ```tsx
 import { color } from "@matematica/core";
 import type { Session } from "@supabase/supabase-js";
@@ -1716,10 +2203,21 @@ function AuthScreen() {
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24, backgroundColor: color.screen }}>
-      <Text style={{ color: color.text, fontSize: 24, marginBottom: 16 }}>matematica</Text>
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        padding: 24,
+        backgroundColor: color.screen,
+      }}
+    >
+      <Text style={{ color: color.text, fontSize: 24, marginBottom: 16 }}>
+        matematica
+      </Text>
       {status === "sent" ? (
-        <Text style={{ color: color.textSecondary }}>Link enviado. Confira seu e-mail.</Text>
+        <Text style={{ color: color.textSecondary }}>
+          Link enviado. Confira seu e-mail.
+        </Text>
       ) : (
         <>
           <TextInput
@@ -1730,12 +2228,17 @@ function AuthScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
             style={{
-              color: color.text, backgroundColor: color.card, borderRadius: 10,
-              padding: 12, marginBottom: 12,
+              color: color.text,
+              backgroundColor: color.card,
+              borderRadius: 10,
+              padding: 12,
+              marginBottom: 12,
             }}
           />
           <Button title="Entrar" color={color.brand} onPress={sendLink} />
-          {status !== "idle" && <Text style={{ color: color.expense }}>{status}</Text>}
+          {status !== "idle" && (
+            <Text style={{ color: color.expense }}>{status}</Text>
+          )}
         </>
       )}
     </View>
@@ -1759,7 +2262,12 @@ export default function Layout() {
   if (!session) return <AuthScreen />;
   return (
     <SessionContext.Provider value={session}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.screen } }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: color.screen },
+        }}
+      />
     </SessionContext.Provider>
   );
 }
@@ -1773,15 +2281,25 @@ ScrollView:
 
 ```tsx
 import {
-  addMonths, addTransaction, color, copyPlanFromPreviousMonth, currentMonth,
-  deleteTransaction, fetchMonthData, font, formatBRL, parseAmountToCents,
-  streamInsights, summarizeMonth,
-  type Budget, type Category, type ChatMessage, type Transaction,
+  addMonths,
+  addTransaction,
+  color,
+  copyPlanFromPreviousMonth,
+  currentMonth,
+  deleteTransaction,
+  fetchMonthData,
+  font,
+  formatBRL,
+  parseAmountToCents,
+  streamInsights,
+  summarizeMonth,
+  type Budget,
+  type Category,
+  type ChatMessage,
+  type Transaction,
 } from "@matematica/core";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Pressable, ScrollView, Text, TextInput, View,
-} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { sb } from "../lib/supabase";
 import { useSession } from "./_layout";
 
@@ -1792,7 +2310,9 @@ interface MonthData {
 }
 
 const row = { flexDirection: "row", alignItems: "center" } as const;
-const mono = { fontFamily: font.mono.includes("Space") ? "Courier" : undefined } as const; // ponytail: custom fonts via expo-font later
+const mono = {
+  fontFamily: font.mono.includes("Space") ? "Courier" : undefined,
+} as const; // ponytail: custom fonts via expo-font later
 
 export default function MonthScreen() {
   const session = useSession();
@@ -1815,7 +2335,9 @@ export default function MonthScreen() {
     reload();
   }, [reload]);
 
-  const summary = data ? summarizeMonth(data.categories, data.budgets, data.transactions) : null;
+  const summary = data
+    ? summarizeMonth(data.categories, data.budgets, data.transactions)
+    : null;
   const active = data?.categories.filter((c) => !c.archived) ?? [];
 
   async function guard(action: () => Promise<unknown>) {
@@ -1830,7 +2352,8 @@ export default function MonthScreen() {
 
   function addTx() {
     const cents = parseAmountToCents(amount);
-    if (cents === null || cents === 0 || !categoryId) return setError("Valor ou categoria inválidos");
+    if (cents === null || cents === 0 || !categoryId)
+      return setError("Valor ou categoria inválidos");
     const today = new Date().toISOString().slice(0, 10);
     guard(() =>
       addTransaction(sb, {
@@ -1872,16 +2395,28 @@ export default function MonthScreen() {
   }
 
   const monthLabel = new Date(`${month}-15`).toLocaleDateString("pt-BR", {
-    month: "long", year: "numeric",
+    month: "long",
+    year: "numeric",
   });
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: color.screen }} contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: color.screen }}
+      contentContainerStyle={{ padding: 16, gap: 16 }}
+    >
       <View style={[row, { justifyContent: "space-between", marginTop: 40 }]}>
         <Pressable onPress={() => setMonth((m) => addMonths(m, -1))}>
           <Text style={{ color: color.text, fontSize: 22 }}>←</Text>
         </Pressable>
-        <Text style={{ color: color.text, fontSize: 20, textTransform: "capitalize" }}>{monthLabel}</Text>
+        <Text
+          style={{
+            color: color.text,
+            fontSize: 20,
+            textTransform: "capitalize",
+          }}
+        >
+          {monthLabel}
+        </Text>
         <Pressable onPress={() => setMonth((m) => addMonths(m, 1))}>
           <Text style={{ color: color.text, fontSize: 22 }}>→</Text>
         </Pressable>
@@ -1894,89 +2429,236 @@ export default function MonthScreen() {
           {data.budgets.length === 0 && (
             <Pressable
               onPress={() => guard(() => copyPlanFromPreviousMonth(sb, month))}
-              style={{ backgroundColor: color.brandSoft, borderRadius: 10, padding: 12 }}
+              style={{
+                backgroundColor: color.brandSoft,
+                borderRadius: 10,
+                padding: 12,
+              }}
             >
-              <Text style={{ color: color.brand, textAlign: "center" }}>Copiar plano do mês anterior</Text>
+              <Text style={{ color: color.brand, textAlign: "center" }}>
+                Copiar plano do mês anterior
+              </Text>
             </Pressable>
           )}
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16, gap: 8 }}>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 8,
+            }}
+          >
             {summary.rows.map((r) => (
-              <View key={r.category.id} style={[row, { justifyContent: "space-between" }]}>
-                <Text style={{ color: color.text, flex: 1 }}>{r.category.name}</Text>
-                <Text style={[mono, { color: color.textSecondary, marginRight: 12 }]}>
+              <View
+                key={r.category.id}
+                style={[row, { justifyContent: "space-between" }]}
+              >
+                <Text style={{ color: color.text, flex: 1 }}>
+                  {r.category.name}
+                </Text>
+                <Text
+                  style={[
+                    mono,
+                    { color: color.textSecondary, marginRight: 12 },
+                  ]}
+                >
                   {formatBRL(r.actualCents)} / {formatBRL(r.plannedCents)}
                 </Text>
-                <Text style={[mono, { color: r.diffCents === 0 ? color.textMuted : r.diffCents > 0 ? color.income : color.expense }]}>
-                  {r.diffCents > 0 ? "+" : ""}{formatBRL(r.diffCents)}
+                <Text
+                  style={[
+                    mono,
+                    {
+                      color:
+                        r.diffCents === 0
+                          ? color.textMuted
+                          : r.diffCents > 0
+                            ? color.income
+                            : color.expense,
+                    },
+                  ]}
+                >
+                  {r.diffCents > 0 ? "+" : ""}
+                  {formatBRL(r.diffCents)}
                 </Text>
               </View>
             ))}
-            <View style={[row, { justifyContent: "space-between", borderTopWidth: 1, borderTopColor: color.hairline, paddingTop: 8 }]}>
-              <Text style={{ color: color.text, fontWeight: "700" }}>Saldo do mês</Text>
-              <Text style={[mono, { color: summary.remainingCents >= 0 ? color.income : color.expense, fontWeight: "700" }]}>
+            <View
+              style={[
+                row,
+                {
+                  justifyContent: "space-between",
+                  borderTopWidth: 1,
+                  borderTopColor: color.hairline,
+                  paddingTop: 8,
+                },
+              ]}
+            >
+              <Text style={{ color: color.text, fontWeight: "700" }}>
+                Saldo do mês
+              </Text>
+              <Text
+                style={[
+                  mono,
+                  {
+                    color:
+                      summary.remainingCents >= 0
+                        ? color.income
+                        : color.expense,
+                    fontWeight: "700",
+                  },
+                ]}
+              >
                 {formatBRL(summary.remainingCents)}
               </Text>
             </View>
           </View>
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16, gap: 8 }}>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 8,
+            }}
+          >
             <View style={[row, { gap: 8, flexWrap: "wrap" }]}>
               {active.map((c) => (
                 <Pressable
                   key={c.id}
                   onPress={() => setCategoryId(c.id)}
                   style={{
-                    backgroundColor: categoryId === c.id ? color.brandSoft : color.cardAlt,
-                    borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6,
+                    backgroundColor:
+                      categoryId === c.id ? color.brandSoft : color.cardAlt,
+                    borderRadius: 999,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
                   }}
                 >
-                  <Text style={{ color: categoryId === c.id ? color.brand : color.textSecondary }}>{c.name}</Text>
+                  <Text
+                    style={{
+                      color:
+                        categoryId === c.id ? color.brand : color.textSecondary,
+                    }}
+                  >
+                    {c.name}
+                  </Text>
                 </Pressable>
               ))}
             </View>
             <TextInput
-              value={amount} onChangeText={setAmount} placeholder="valor"
-              placeholderTextColor={color.textMuted} keyboardType="decimal-pad"
-              style={{ color: color.text, backgroundColor: color.cardAlt, borderRadius: 10, padding: 10 }}
+              value={amount}
+              onChangeText={setAmount}
+              placeholder="valor"
+              placeholderTextColor={color.textMuted}
+              keyboardType="decimal-pad"
+              style={{
+                color: color.text,
+                backgroundColor: color.cardAlt,
+                borderRadius: 10,
+                padding: 10,
+              }}
             />
             <TextInput
-              value={description} onChangeText={setDescription} placeholder="descrição"
+              value={description}
+              onChangeText={setDescription}
+              placeholder="descrição"
               placeholderTextColor={color.textMuted}
-              style={{ color: color.text, backgroundColor: color.cardAlt, borderRadius: 10, padding: 10 }}
+              style={{
+                color: color.text,
+                backgroundColor: color.cardAlt,
+                borderRadius: 10,
+                padding: 10,
+              }}
             />
-            <Pressable onPress={addTx} style={{ backgroundColor: color.brand, borderRadius: 10, padding: 12 }}>
-              <Text style={{ color: color.screen, textAlign: "center", fontWeight: "700" }}>Adicionar</Text>
+            <Pressable
+              onPress={addTx}
+              style={{
+                backgroundColor: color.brand,
+                borderRadius: 10,
+                padding: 12,
+              }}
+            >
+              <Text
+                style={{
+                  color: color.screen,
+                  textAlign: "center",
+                  fontWeight: "700",
+                }}
+              >
+                Adicionar
+              </Text>
             </Pressable>
           </View>
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16 }}>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+            }}
+          >
             {data.transactions.length === 0 && (
-              <Text style={{ color: color.textMuted }}>Nenhum lançamento neste mês.</Text>
+              <Text style={{ color: color.textMuted }}>
+                Nenhum lançamento neste mês.
+              </Text>
             )}
             {data.transactions.map((t) => {
               const cat = data.categories.find((c) => c.id === t.category_id);
               return (
-                <View key={t.id} style={[row, { justifyContent: "space-between", paddingVertical: 6 }]}>
-                  <Text style={[mono, { color: color.textMuted, fontSize: 12 }]}>
+                <View
+                  key={t.id}
+                  style={[
+                    row,
+                    { justifyContent: "space-between", paddingVertical: 6 },
+                  ]}
+                >
+                  <Text
+                    style={[mono, { color: color.textMuted, fontSize: 12 }]}
+                  >
                     {t.date.slice(8, 10)}/{t.date.slice(5, 7)}
                   </Text>
-                  <Text style={{ color: color.text, flex: 1, marginLeft: 12 }} numberOfLines={1}>
+                  <Text
+                    style={{ color: color.text, flex: 1, marginLeft: 12 }}
+                    numberOfLines={1}
+                  >
                     {t.description || cat?.name || "—"}
                   </Text>
-                  <Text style={[mono, { color: cat?.kind === "income" ? color.income : color.text }]}>
-                    {cat?.kind === "income" ? "+" : "−"}{formatBRL(t.amount_cents)}
+                  <Text
+                    style={[
+                      mono,
+                      {
+                        color:
+                          cat?.kind === "income" ? color.income : color.text,
+                      },
+                    ]}
+                  >
+                    {cat?.kind === "income" ? "+" : "−"}
+                    {formatBRL(t.amount_cents)}
                   </Text>
-                  <Pressable onPress={() => guard(() => deleteTransaction(sb, t.id))}>
-                    <Text style={{ color: color.expense, marginLeft: 12 }}>×</Text>
+                  <Pressable
+                    onPress={() => guard(() => deleteTransaction(sb, t.id))}
+                  >
+                    <Text style={{ color: color.expense, marginLeft: 12 }}>
+                      ×
+                    </Text>
                   </Pressable>
                 </View>
               );
             })}
           </View>
 
-          <View style={{ backgroundColor: color.card, borderRadius: 16, padding: 16, gap: 8 }}>
-            <Text style={{ color: color.text, fontWeight: "700" }}>Assistente do mês</Text>
+          <View
+            style={{
+              backgroundColor: color.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 8,
+            }}
+          >
+            <Text style={{ color: color.text, fontWeight: "700" }}>
+              Assistente do mês
+            </Text>
             {chat.map((m, i) => (
               <Text
                 key={i}
@@ -1990,19 +2672,46 @@ export default function MonthScreen() {
             ))}
             <View style={[row, { gap: 8 }]}>
               <TextInput
-                value={chatInput} onChangeText={setChatInput}
-                placeholder="Pergunte sobre este mês…" placeholderTextColor={color.textMuted}
-                style={{ flex: 1, color: color.text, backgroundColor: color.cardAlt, borderRadius: 10, padding: 10 }}
+                value={chatInput}
+                onChangeText={setChatInput}
+                placeholder="Pergunte sobre este mês…"
+                placeholderTextColor={color.textMuted}
+                style={{
+                  flex: 1,
+                  color: color.text,
+                  backgroundColor: color.cardAlt,
+                  borderRadius: 10,
+                  padding: 10,
+                }}
               />
-              <Pressable onPress={sendChat} disabled={busy} style={{ backgroundColor: color.brand, borderRadius: 10, padding: 10, opacity: busy ? 0.5 : 1 }}>
-                <Text style={{ color: color.screen, fontWeight: "700" }}>→</Text>
+              <Pressable
+                onPress={sendChat}
+                disabled={busy}
+                style={{
+                  backgroundColor: color.brand,
+                  borderRadius: 10,
+                  padding: 10,
+                  opacity: busy ? 0.5 : 1,
+                }}
+              >
+                <Text style={{ color: color.screen, fontWeight: "700" }}>
+                  →
+                </Text>
               </Pressable>
             </View>
           </View>
         </>
       )}
       <Pressable onPress={() => sb.auth.signOut()}>
-        <Text style={{ color: color.textMuted, textAlign: "center", marginBottom: 40 }}>sair</Text>
+        <Text
+          style={{
+            color: color.textMuted,
+            textAlign: "center",
+            marginBottom: 40,
+          }}
+        >
+          sair
+        </Text>
       </Pressable>
     </ScrollView>
   );
@@ -2025,12 +2734,14 @@ git add -A && git commit -m "feat(mobile): expo app with month screen and chat"
 ### Task 11: Root verify + README
 
 **Files:**
+
 - Create: `README.md`
 - Modify: root `package.json` only if a script proved wrong during Tasks 1–10.
 
 - [ ] **Step 1: Write README**
 
 `README.md`:
+
 ```markdown
 # matematica
 
@@ -2075,6 +2786,7 @@ git add -A && git commit -m "docs: README and verified workspace"
 ### Task 12: Service scaffold
 
 **Files:**
+
 - Create: `pyproject.toml`, `.gitignore`, `.env.example`, `app/__init__.py`, `app/config.py`, `app/schemas.py`, `app/errors.py`, `app/main.py`, `tests/__init__.py`, `tests/test_health.py`
 
 - [ ] **Step 1: Init repo and write config**
@@ -2085,6 +2797,7 @@ cd /Users/daltoncastro/Documents/Projects/matematica-ai-api && git init -b main
 ```
 
 `pyproject.toml`:
+
 ```toml
 [build-system]
 requires = ["setuptools==83.0.0"]
@@ -2120,6 +2833,7 @@ packages = ["app"]
 ```
 
 `.gitignore`:
+
 ```
 __pycache__/
 .venv/
@@ -2129,6 +2843,7 @@ __pycache__/
 ```
 
 `.env.example`:
+
 ```
 GEMINI_API_KEY=
 SUPABASE_URL=
@@ -2137,6 +2852,7 @@ CORS_ORIGINS=http://localhost:5173
 ```
 
 `app/config.py`:
+
 ```python
 from pydantic_settings import BaseSettings
 
@@ -2155,6 +2871,7 @@ def get_settings() -> Settings:
 ```
 
 `app/schemas.py`:
+
 ```python
 from typing import Literal
 
@@ -2172,6 +2889,7 @@ class ChatRequest(BaseModel):
 ```
 
 `app/errors.py`:
+
 ```python
 class UpstreamError(Exception):
     """Gemini or Supabase failed; details are logged, clients get a generic message."""
@@ -2188,6 +2906,7 @@ class RateLimitedError(UpstreamError):
 ```
 
 `app/main.py`:
+
 ```python
 import logging
 
@@ -2221,6 +2940,7 @@ async def health() -> dict[str, str]:
 ```
 
 `tests/test_health.py`:
+
 ```python
 from fastapi.testclient import TestClient
 
@@ -2242,6 +2962,7 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 GEMINI_API_KEY=x SUPABASE_URL=http://x SUPABASE_ANON_KEY=x .venv/bin/pytest -q
 .venv/bin/ruff check .
 ```
+
 Expected: 1 test passes; ruff clean.
 
 - [ ] **Step 3: Commit**
@@ -2253,14 +2974,17 @@ git add -A && git commit -m "chore: fastapi scaffold with health check"
 ### Task 13: Supabase auth + data fetch
 
 **Files:**
+
 - Create: `app/supabase.py`, `tests/test_supabase.py`
 
 **Interfaces:**
+
 - Produces: `async validate_token(token: str) -> str` (returns user id, raises `UpstreamError(401, ...)` on bad token); `async fetch_month_data(token: str, month: str) -> dict` with keys `categories`, `budgets`, `transactions`.
 
 - [ ] **Step 1: Write failing tests (mock httpx)**
 
 `tests/test_supabase.py`:
+
 ```python
 import httpx
 import pytest
@@ -2393,14 +3117,17 @@ git add -A && git commit -m "feat: supabase token validation and month data fetc
 ### Task 14: Context + prompts (TDD)
 
 **Files:**
+
 - Create: `app/context.py`, `app/prompts.py`, `tests/test_context.py`
 
 **Interfaces:**
+
 - Produces: `build_context(data: dict, month: str) -> str` (compact plain-text tables); `SYSTEM_PROMPT: str` in prompts.
 
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_context.py`:
+
 ```python
 from app.context import build_context
 
@@ -2435,6 +3162,7 @@ Run: `... .venv/bin/pytest tests/test_context.py -q` — Expected: FAIL.
 - [ ] **Step 2: Implement**
 
 `app/context.py`:
+
 ```python
 """Turn month data into a compact plain-text block for the model."""
 
@@ -2476,6 +3204,7 @@ def build_context(data: dict[str, Any], month: str) -> str:
 ```
 
 `app/prompts.py`:
+
 ```python
 SYSTEM_PROMPT = """Você é o assistente financeiro do app matematica.
 Responda em português, de forma direta e curta, sobre o mês do usuário
@@ -2496,16 +3225,19 @@ git add -A && git commit -m "feat: month context builder and system prompt"
 ### Task 15: Gemini streaming + chat endpoint
 
 **Files:**
+
 - Create: `app/gemini.py`, `app/service.py`, `tests/test_chat.py`
 - Modify: `app/main.py` (add router/endpoint)
 
 **Interfaces:**
+
 - Consumes: `validate_token`, `fetch_month_data`, `build_context`, `SYSTEM_PROMPT`, `ChatRequest`.
 - Produces: `POST /insights/chat` — SSE stream of `data: {"text": "..."}` events.
 
 - [ ] **Step 1: Write failing endpoint test (mock supabase + gemini)**
 
 `tests/test_chat.py`:
+
 ```python
 from fastapi.testclient import TestClient
 
@@ -2606,6 +3338,7 @@ async def stream_gemini(system: str, messages: list[dict[str, str]]) -> AsyncGen
 - [ ] **Step 3: Implement service + endpoint**
 
 `app/service.py`:
+
 ```python
 import json
 from collections.abc import AsyncGenerator, Callable
@@ -2631,6 +3364,7 @@ async def chat_events(
 ```
 
 Append to `app/main.py`:
+
 ```python
 from fastapi import Header
 from fastapi.responses import StreamingResponse
@@ -2672,11 +3406,13 @@ git add -A && git commit -m "feat: gemini-backed streaming insights chat endpoin
 ### Task 16: Dockerfile + README
 
 **Files:**
+
 - Create: `Dockerfile`, `.dockerignore`, `README.md`
 
 - [ ] **Step 1: Write files**
 
 `Dockerfile`:
+
 ```dockerfile
 FROM python:3.12-slim
 WORKDIR /srv
@@ -2688,6 +3424,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 `.dockerignore`:
+
 ```
 .venv
 __pycache__
@@ -2696,6 +3433,7 @@ tests
 ```
 
 `README.md`:
+
 ```markdown
 # matematica-ai-api
 
@@ -2706,7 +3444,7 @@ no service key).
 ## Run
 
 python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
-cp .env.example .env   # fill in
+cp .env.example .env # fill in
 .venv/bin/uvicorn app.main:app --reload
 
 ## Endpoint

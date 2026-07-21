@@ -35,17 +35,30 @@ export function CategoryManager({
 
   if (!open) {
     return (
-      <button className="self-start" style={{ color: color.textMuted }} onClick={() => setOpen(true)}>
+      <button
+        className="self-start"
+        style={{ color: color.textMuted }}
+        onClick={() => setOpen(true)}
+      >
         gerenciar categorias
       </button>
     );
   }
 
   return (
-    <section style={{ background: color.card, borderRadius: radius.card, padding: space.md }}>
+    <section
+      style={{
+        background: color.card,
+        borderRadius: radius.card,
+        padding: space.md,
+      }}
+    >
       <div className="flex items-center justify-between">
         <h2 style={{ fontWeight: 700 }}>Categorias</h2>
-        <button style={{ color: color.textMuted }} onClick={() => setOpen(false)}>
+        <button
+          style={{ color: color.textMuted }}
+          onClick={() => setOpen(false)}
+        >
           fechar
         </button>
       </div>
@@ -60,16 +73,22 @@ export function CategoryManager({
             <input
               defaultValue={c.name}
               onBlur={(e) =>
-                e.target.value !== c.name && run(() => renameCategory(sb, c.id, e.target.value))
+                e.target.value !== c.name &&
+                run(() => renameCategory(sb, c.id, e.target.value))
               }
-              style={{ background: "transparent", opacity: c.archived ? 0.4 : 1 }}
+              style={{
+                background: "transparent",
+                opacity: c.archived ? 0.4 : 1,
+              }}
             />
             <span style={{ color: color.textMuted, fontSize: 12 }}>
               {c.kind === "income" ? "renda" : "despesa"}
             </span>
             <button
               style={{ color: color.textMuted, marginLeft: space.md }}
-              onClick={() => run(() => setCategoryArchived(sb, c.id, !c.archived))}
+              onClick={() =>
+                run(() => setCategoryArchived(sb, c.id, !c.archived))
+              }
             >
               {c.archived ? "restaurar" : "arquivar"}
             </button>
@@ -82,7 +101,9 @@ export function CategoryManager({
         onSubmit={(e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          run(() => addCategory(sb, { name: name.trim(), kind })).then(() => setName(""));
+          run(() => addCategory(sb, { name: name.trim(), kind })).then(() =>
+            setName(""),
+          );
         }}
       >
         <input
@@ -98,7 +119,11 @@ export function CategoryManager({
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as Kind)}
-          style={{ background: color.cardAlt, borderRadius: radius.control, padding: space.xs }}
+          style={{
+            background: color.cardAlt,
+            borderRadius: radius.control,
+            padding: space.xs,
+          }}
         >
           <option value="expense">despesa</option>
           <option value="income">renda</option>

@@ -15,16 +15,27 @@ export function AuthScreen() {
   return (
     <main
       className="flex min-h-screen items-center justify-center"
-      style={{ background: color.screen, fontFamily: font.body, color: color.text }}
+      style={{
+        background: color.screen,
+        fontFamily: font.body,
+        color: color.text,
+      }}
     >
       <form
         onSubmit={sendLink}
         className="flex w-80 flex-col"
-        style={{ gap: space.md, background: color.card, borderRadius: radius.card, padding: space.lg }}
+        style={{
+          gap: space.md,
+          background: color.card,
+          borderRadius: radius.card,
+          padding: space.lg,
+        }}
       >
         <h1 style={{ fontFamily: font.display, fontSize: 24 }}>matematica</h1>
         {status === "sent" ? (
-          <p style={{ color: color.textSecondary }}>Link enviado. Confira seu e-mail.</p>
+          <p style={{ color: color.textSecondary }}>
+            Link enviado. Confira seu e-mail.
+          </p>
         ) : (
           <>
             <input
@@ -53,7 +64,9 @@ export function AuthScreen() {
             >
               Entrar
             </button>
-            {status !== "idle" && <p style={{ color: color.expense }}>{status}</p>}
+            {status !== "idle" && (
+              <p style={{ color: color.expense }}>{status}</p>
+            )}
           </>
         )}
       </form>
