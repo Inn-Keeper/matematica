@@ -14,8 +14,10 @@ current month's finances.
 
 - **Budget model:** planned vs. actual per category, plus a per-month
   transaction ledger. The ledger feeds the actuals.
-- **Backend:** Supabase (auth, Postgres with RLS, Edge Functions).
-- **AI scope:** working monthly insights chat on day one.
+- **Backend:** Supabase (auth, Postgres with RLS).
+- **AI scope:** working monthly insights chat on day one, served by a
+  separate Python API repo mirroring `ativscrum-ai-api` (user-confirmed,
+  for consistency across projects).
 - **Data entry:** manual only. No CSV/OFX/Excel import.
 - **Architecture:** approach A — rollups computed client-side in core from
   raw transactions; the DB stores only facts. No SQL views, no shared UI
@@ -44,8 +46,8 @@ matematica/
     core/                 @matematica/core — pure TS, main: src/index.ts
   supabase/
     migrations/           schema below
-    functions/
-      insights-chat/      Edge Function calling Claude
+
+../matematica-ai-api/     sibling repo — Python insights API (see AI section)
 ```
 
 ## Data model
@@ -71,8 +73,9 @@ Amounts are `integer` cents. Months are `text 'YYYY-MM'`.
   total, remaining). Pure function; the app's only non-trivial logic.
 - `data.ts` — Supabase queries: fetch month data, CRUD categories/budgets/
   transactions, `copyPlanFromPreviousMonth(month)`.
-- `insights.ts` — client helper that calls the `insights-chat` Edge
-  Function and exposes the streamed reply.
+- `insights.ts` — client helper that calls the AI API's `/insights/chat`
+  endpoint (URL from env) forwarding the user's Supabase access token,
+  and exposes the streamed reply.
 - Tests: Vitest on `rollup.ts` and `money.ts`.
 
 ## Main flow (both apps)
@@ -89,14 +92,25 @@ One screen — the month view:
 Secondary: minimal category management (add/rename/archive) and the AI
 chat panel. Auth: Supabase email magic-link (same as stretchy).
 
-## AI insights chat
+## AI insights chat — `matematica-ai-api` (separate repo)
 
-- **Edge Function `insights-chat`:** verifies the caller's Supabase JWT,
-  loads that user's budgets + transactions for the requested month, builds
-  a compact context block, calls the Claude API (`claude-sonnet-5`) with
-  the user's chat messages, streams the response back (SSE).
-- **Secrets:** `ANTHROPIC_API_KEY` set as a Supabase function secret only.
-  Clients never see it.
+A standalone Python service mirroring the `ativscrum-ai-api` layout:
+FastAPI + uvicorn + pydantic (pinned versions), flat `app/` module
+(`main.py`, `config.py`, `schemas.py`, `errors.py`, `supabase.py`,
+`context.py`, `prompts.py`, `claude.py`, `service.py`), `Dockerfile`,
+`.env.example`, `tests/` with pytest + ruff.
+
+- **Endpoint `POST /insights/chat`:** takes `month` + chat messages,
+  requires the caller's Supabase access token as a Bearer header.
+- **Auth & data:** verifies the JWT, then queries Supabase PostgREST with
+  that same user token so RLS applies — the service holds no service-role
+  key and can only read what the user can.
+- **Model call:** builds a compact month context (budgets + transactions)
+  and calls Claude (`claude-sonnet-5`) via the `anthropic` SDK (one dep,
+  justified: SSE streaming + retries vs. hand-rolling over httpx), then
+  streams the reply to the client as SSE.
+- **Secrets:** `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET`
+  as service env vars only. Clients never see them.
 - **Client:** chat panel (web and mobile) holding message history in
   component state; no persistence of chat history in v1.
 
@@ -104,7 +118,7 @@ chat panel. Auth: Supabase email magic-link (same as stretchy).
 
 - Supabase query errors surface to the UI as inline error states — never
   swallowed.
-- Edge Function returns proper HTTP errors (401 unauthenticated, 502 with
+- The AI API returns proper HTTP errors (401 unauthenticated, 502 with
   a generic message on upstream Claude failure) and logs details
   server-side.
 - Quick-add validates: amount > 0, category required, valid date.
@@ -114,6 +128,8 @@ chat panel. Auth: Supabase email magic-link (same as stretchy).
 - `packages/core`: Vitest unit tests for `rollup.ts` (mixed
   income/expense, category with plan but no transactions and vice versa,
   empty month) and `money.ts` formatting.
+- `matematica-ai-api`: pytest on context assembly and prompt building
+  (Claude calls mocked); ruff for lint.
 - Apps: typecheck + lint only in v1; e2e deferred until flows stabilize.
 - Root `verify` script: typecheck + lint + format:check + test + build.
 
