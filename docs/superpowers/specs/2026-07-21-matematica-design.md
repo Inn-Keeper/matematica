@@ -117,17 +117,19 @@ FastAPI + uvicorn + pydantic (pinned versions), flat `app/` module
 
 - **Endpoint `POST /insights/chat`:** takes `month` + chat messages,
   requires the caller's Supabase access token as a Bearer header.
-- **Auth & data:** verifies the JWT, then queries Supabase PostgREST with
-  that same user token so RLS applies — the service holds no service-role
-  key and can only read what the user can.
+- **Auth & data:** validates the token against Supabase's `/auth/v1/user`
+  endpoint, then queries Supabase PostgREST with that same user token so
+  RLS applies — the service holds no service-role key and can only read
+  what the user can.
 - **Model call:** builds a compact month context (budgets + transactions)
   and calls Gemini free tier (`gemini-2.5-flash`) through `gemini.py`
   using httpx directly — same as ativscrum-ai-api, no extra SDK dep —
   then streams the reply to the client as SSE. Free-tier rate limits are
   acceptable for personal use; surface 429s to the client as a friendly
   "try again shortly" error.
-- **Secrets:** `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET`
-  as service env vars only. Clients never see them.
+- **Secrets:** `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`
+  as service env vars only (anon key is public by nature, but still
+  env-configured). The Gemini key clients never see.
 - **Client:** chat panel (web and mobile) holding message history in
   component state; no persistence of chat history in v1.
 
