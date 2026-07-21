@@ -31,8 +31,8 @@ export function QuickAdd({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const cents = parseAmountToCents(amount);
-    if (cents === null || cents === 0) return setError("Valor inválido");
-    if (!categoryId) return setError("Escolha uma categoria");
+    if (cents === null || cents === 0) return setError("Invalid amount");
+    if (!categoryId) return setError("Choose a category");
     try {
       await addTransaction(sb, {
         category_id: categoryId,
@@ -80,7 +80,7 @@ export function QuickAdd({
         required
         style={field}
       >
-        <option value="">categoria…</option>
+        <option value="">category…</option>
         {active.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
@@ -88,7 +88,7 @@ export function QuickAdd({
         ))}
       </select>
       <input
-        placeholder="valor"
+        placeholder="amount"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         required
@@ -96,7 +96,7 @@ export function QuickAdd({
         style={field}
       />
       <input
-        placeholder="descrição"
+        placeholder="description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         className="flex-1"

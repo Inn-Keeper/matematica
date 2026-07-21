@@ -67,7 +67,7 @@ export default function MonthScreen() {
   function addTx() {
     const cents = parseAmountToCents(amount);
     if (cents === null || cents === 0 || !categoryId) {
-      setError("Valor ou categoria inválidos");
+      setError("Invalid amount or category");
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
@@ -110,7 +110,7 @@ export default function MonthScreen() {
     }
   }
 
-  const monthLabel = new Date(`${month}-15`).toLocaleDateString("pt-BR", {
+  const monthLabel = new Date(`${month}-15`).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
   });
@@ -152,7 +152,7 @@ export default function MonthScreen() {
               }}
             >
               <Text style={{ color: color.brand, textAlign: "center" }}>
-                Copiar plano do mês anterior
+                Copy last month's plan
               </Text>
             </Pressable>
           )}
@@ -203,7 +203,7 @@ export default function MonthScreen() {
               ]}
             >
               <Text style={{ color: color.text, fontWeight: "700" }}>
-                Saldo do mês
+                Month balance
               </Text>
               <Text
                 style={{
@@ -252,7 +252,7 @@ export default function MonthScreen() {
             <TextInput
               value={amount}
               onChangeText={setAmount}
-              placeholder="valor"
+              placeholder="amount"
               placeholderTextColor={color.textMuted}
               keyboardType="decimal-pad"
               style={{
@@ -265,7 +265,7 @@ export default function MonthScreen() {
             <TextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="descrição"
+              placeholder="description"
               placeholderTextColor={color.textMuted}
               style={{
                 color: color.text,
@@ -303,7 +303,7 @@ export default function MonthScreen() {
           >
             {data.transactions.length === 0 && (
               <Text style={{ color: color.textMuted }}>
-                Nenhum lançamento neste mês.
+                No transactions this month.
               </Text>
             )}
             {data.transactions.map((t) => {
@@ -354,7 +354,7 @@ export default function MonthScreen() {
             }}
           >
             <Text style={{ color: color.text, fontWeight: "700" }}>
-              Assistente do mês
+              Month assistant
             </Text>
             {chat.map((m, i) => (
               <Text
@@ -371,7 +371,7 @@ export default function MonthScreen() {
               <TextInput
                 value={chatInput}
                 onChangeText={setChatInput}
-                placeholder="Pergunte sobre este mês…"
+                placeholder="Ask about this month…"
                 placeholderTextColor={color.textMuted}
                 style={{
                   flex: 1,
@@ -407,7 +407,7 @@ export default function MonthScreen() {
             marginBottom: 40,
           }}
         >
-          sair
+          sign out
         </Text>
       </Pressable>
     </ScrollView>

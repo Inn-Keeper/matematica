@@ -57,7 +57,7 @@ export function MonthScreen({ session }: { session: Session }) {
     }
   }
 
-  const monthLabel = new Date(`${month}-15`).toLocaleDateString("pt-BR", {
+  const monthLabel = new Date(`${month}-15`).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
   });
@@ -78,7 +78,7 @@ export function MonthScreen({ session }: { session: Session }) {
         <header className="flex items-center justify-between">
           <div className="flex items-center" style={{ gap: space.md }}>
             <button
-              aria-label="Mês anterior"
+              aria-label="Previous month"
               onClick={() => setMonth((m) => addMonths(m, -1))}
             >
               ←
@@ -93,7 +93,7 @@ export function MonthScreen({ session }: { session: Session }) {
               {monthLabel}
             </h1>
             <button
-              aria-label="Próximo mês"
+              aria-label="Next month"
               onClick={() => setMonth((m) => addMonths(m, 1))}
             >
               →
@@ -103,7 +103,7 @@ export function MonthScreen({ session }: { session: Session }) {
             style={{ color: color.textMuted }}
             onClick={() => sb.auth.signOut()}
           >
-            sair
+            sign out
           </button>
         </header>
 
@@ -134,7 +134,7 @@ export function MonthScreen({ session }: { session: Session }) {
                     fontWeight: 500,
                   }}
                 >
-                  Copiar plano do mês anterior
+                  Copy last month's plan
                 </button>
               )}
               <SummaryTable

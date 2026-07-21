@@ -31,14 +31,14 @@ function AuthScreen() {
       </Text>
       {status === "sent" ? (
         <Text style={{ color: color.textSecondary }}>
-          Link enviado. Confira seu e-mail.
+          Link sent. Check your email.
         </Text>
       ) : (
         <>
           <TextInput
             value={email}
             onChangeText={setEmail}
-            placeholder="seu@email.com"
+            placeholder="you@email.com"
             placeholderTextColor={color.textMuted}
             autoCapitalize="none"
             keyboardType="email-address"
@@ -50,7 +50,7 @@ function AuthScreen() {
               marginBottom: 12,
             }}
           />
-          <Button title="Entrar" color={color.brand} onPress={sendLink} />
+          <Button title="Sign in" color={color.brand} onPress={sendLink} />
           {status !== "idle" && (
             <Text style={{ color: color.expense }}>{status}</Text>
           )}

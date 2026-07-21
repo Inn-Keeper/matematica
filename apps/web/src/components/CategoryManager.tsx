@@ -40,7 +40,7 @@ export function CategoryManager({
         style={{ color: color.textMuted }}
         onClick={() => setOpen(true)}
       >
-        gerenciar categorias
+        manage categories
       </button>
     );
   }
@@ -54,7 +54,7 @@ export function CategoryManager({
       }}
     >
       <div className="flex items-center justify-between">
-        <h2 style={{ fontWeight: 700 }}>Categorias</h2>
+        <h2 style={{ fontWeight: 700 }}>Categories</h2>
         <button
           style={{ color: color.textMuted }}
           onClick={() => setOpen(false)}
@@ -82,7 +82,7 @@ export function CategoryManager({
               }}
             />
             <span style={{ color: color.textMuted, fontSize: 12 }}>
-              {c.kind === "income" ? "renda" : "despesa"}
+              {c.kind === "income" ? "income" : "expense"}
             </span>
             <button
               style={{ color: color.textMuted, marginLeft: space.md }}
@@ -90,7 +90,7 @@ export function CategoryManager({
                 run(() => setCategoryArchived(sb, c.id, !c.archived))
               }
             >
-              {c.archived ? "restaurar" : "arquivar"}
+              {c.archived ? "restore" : "archive"}
             </button>
           </li>
         ))}
@@ -107,7 +107,7 @@ export function CategoryManager({
         }}
       >
         <input
-          placeholder="nova categoria"
+          placeholder="new category"
           value={name}
           onChange={(e) => setName(e.target.value)}
           style={{
@@ -125,8 +125,8 @@ export function CategoryManager({
             padding: space.xs,
           }}
         >
-          <option value="expense">despesa</option>
-          <option value="income">renda</option>
+          <option value="expense">expense</option>
+          <option value="income">income</option>
         </select>
         <button type="submit" style={{ color: color.brand, fontWeight: 700 }}>
           adicionar

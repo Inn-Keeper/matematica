@@ -69,7 +69,7 @@ export function ChatPanel({
           marginBottom: space.sm,
         }}
       >
-        Assistente do mês
+        Month assistant
       </h2>
       <div className="flex flex-col" style={{ gap: space.sm }}>
         {messages.map((m, i) => (
@@ -103,7 +103,7 @@ export function ChatPanel({
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Pergunte sobre este mês…"
+          placeholder="Ask about this month…"
           className="flex-1"
           style={{
             background: color.cardAlt,

@@ -38,7 +38,7 @@ export function SummaryTable({
   async function savePlanned(categoryId: string) {
     const cents = parseAmountToCents(draft);
     if (cents === null) {
-      setError("Valor inválido");
+      setError("Invalid amount");
       return;
     }
     try {
@@ -69,9 +69,9 @@ export function SummaryTable({
             <th className="text-left" style={{ fontWeight: 500 }}>
               Categoria
             </th>
-            <th style={{ fontWeight: 500 }}>Planejado</th>
-            <th style={{ fontWeight: 500 }}>Real</th>
-            <th style={{ fontWeight: 500 }}>Dif.</th>
+            <th style={{ fontWeight: 500 }}>Planned</th>
+            <th style={{ fontWeight: 500 }}>Actual</th>
+            <th style={{ fontWeight: 500 }}>Diff</th>
           </tr>
         </thead>
         <tbody>
@@ -90,7 +90,7 @@ export function SummaryTable({
                       fontSize: 11,
                     }}
                   >
-                    renda
+                    income
                   </span>
                 )}
               </td>
@@ -138,7 +138,7 @@ export function SummaryTable({
               fontWeight: 700,
             }}
           >
-            <td style={{ padding: `${space.sm}px 0` }}>Saldo do mês</td>
+            <td style={{ padding: `${space.sm}px 0` }}>Month balance</td>
             <td />
             <td />
             <td

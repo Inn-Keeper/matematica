@@ -36,7 +36,7 @@ export function Ledger({
 
   if (transactions.length === 0) {
     return (
-      <p style={{ color: color.textMuted }}>Nenhum lançamento neste mês.</p>
+      <p style={{ color: color.textMuted }}>No transactions this month.</p>
     );
   }
 
@@ -101,7 +101,7 @@ export function Ledger({
                   {formatBRL(t.amount_cents)}
                 </span>
                 <button
-                  aria-label="Excluir"
+                  aria-label="Delete"
                   onClick={() => remove(t.id)}
                   className="opacity-0 group-hover:opacity-100"
                   style={{ color: color.expense, marginLeft: space.md }}

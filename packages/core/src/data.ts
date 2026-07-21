@@ -8,7 +8,7 @@ function unwrap<T>(result: {
   error: { message: string } | null;
 }): T {
   if (result.error) throw new Error(result.error.message);
-  if (result.data === null) throw new Error("Resposta vazia do Supabase.");
+  if (result.data === null) throw new Error("Empty response from Supabase.");
   return result.data;
 }
 

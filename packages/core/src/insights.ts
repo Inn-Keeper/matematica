@@ -31,8 +31,8 @@ export async function* streamInsights(
   if (!res.ok) {
     throw new Error(
       res.status === 429
-        ? "O assistente está ocupado. Tente novamente em instantes."
-        : `Falha no assistente (${res.status}).`,
+        ? "The assistant is busy. Try again in a moment."
+        : `Assistant request failed (${res.status}).`,
     );
   }
   // ponytail: RN fetch has no body stream — fall back to buffering the full reply.

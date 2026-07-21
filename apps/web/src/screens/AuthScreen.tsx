@@ -34,7 +34,7 @@ export function AuthScreen() {
         <h1 style={{ fontFamily: font.display, fontSize: 24 }}>matematica</h1>
         {status === "sent" ? (
           <p style={{ color: color.textSecondary }}>
-            Link enviado. Confira seu e-mail.
+            Link sent. Check your email.
           </p>
         ) : (
           <>
@@ -43,7 +43,7 @@ export function AuthScreen() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder="you@email.com"
               className="w-full"
               style={{
                 background: color.cardAlt,
@@ -62,7 +62,7 @@ export function AuthScreen() {
                 fontWeight: 700,
               }}
             >
-              Entrar
+              Sign in
             </button>
             {status !== "idle" && (
               <p style={{ color: color.expense }}>{status}</p>
