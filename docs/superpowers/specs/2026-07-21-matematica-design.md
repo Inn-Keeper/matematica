@@ -67,6 +67,10 @@ Amounts are `integer` cents. Months are `text 'YYYY-MM'`.
 
 - `types.ts` — `Category`, `Budget`, `Transaction`, `MonthSummary`,
   `CategoryRow`.
+- `tokens.ts` — shared design tokens (stretchy pattern): typed const
+  objects for color, font, radius, spacing, motion durations/easings.
+  Single source of truth; web maps them into Tailwind config, mobile
+  consumes them directly in styles.
 - `money.ts` — cents ↔ display formatting (`Intl.NumberFormat('pt-BR')`).
 - `rollup.ts` — `summarizeMonth(categories, budgets, transactions) →
   MonthSummary` (per-category planned/actual/diff, income total, expense
@@ -92,6 +96,17 @@ One screen — the month view:
 Secondary: minimal category management (add/rename/archive) and the AI
 chat panel. Auth: Supabase email magic-link (same as stretchy).
 
+## Design system & motion
+
+- All visual values come from `tokens.ts` in core — no hardcoded colors,
+  radii, or durations in either app.
+- **Web:** `motion` (motion.dev, the framer-motion successor) for
+  component/layout animation — month transitions, row enter/exit, diff
+  number changes. GSAP deferred: Motion covers everything v1 animates;
+  add GSAP only if a complex scrubbed timeline shows up.
+- **Mobile:** `react-native-reanimated` (same as stretchy) driven by the
+  same motion tokens (durations/easings), so both apps move consistently.
+
 ## AI insights chat — `matematica-ai-api` (separate repo)
 
 A standalone Python service mirroring the `ativscrum-ai-api` layout:
@@ -106,10 +121,12 @@ FastAPI + uvicorn + pydantic (pinned versions), flat `app/` module
   that same user token so RLS applies — the service holds no service-role
   key and can only read what the user can.
 - **Model call:** builds a compact month context (budgets + transactions)
-  and calls Claude (`claude-sonnet-5`) via the `anthropic` SDK (one dep,
-  justified: SSE streaming + retries vs. hand-rolling over httpx), then
-  streams the reply to the client as SSE.
-- **Secrets:** `ANTHROPIC_API_KEY`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET`
+  and calls Gemini free tier (`gemini-2.5-flash`) through `gemini.py`
+  using httpx directly — same as ativscrum-ai-api, no extra SDK dep —
+  then streams the reply to the client as SSE. Free-tier rate limits are
+  acceptable for personal use; surface 429s to the client as a friendly
+  "try again shortly" error.
+- **Secrets:** `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_JWT_SECRET`
   as service env vars only. Clients never see them.
 - **Client:** chat panel (web and mobile) holding message history in
   component state; no persistence of chat history in v1.
