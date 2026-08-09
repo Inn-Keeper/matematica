@@ -409,3 +409,73 @@ Expected: no whitespace errors and a clean worktree.
 
 Report the commits created, tests and builds run, any runtime limitation, and
 confirm that nothing was pushed.
+
+---
+
+### Task 6: Validate the Authenticated Core Flow Before New Features
+
+**Files:**
+
+- Verify only; do not modify production files unless this validation exposes a
+  reproducible defect.
+
+**Interfaces:**
+
+- Consumes: the completed category, monthly budget, dated transaction, rollup,
+  authentication, and persistence flows on web and mobile.
+- Produces: runtime evidence for the complete signed-in monthly workflow and a
+  separate observation record for manual-entry friction.
+
+**Evidence boundary carried forward from the completed work:**
+
+- The pre-sign-in crash was reproduced and cleared in Expo Go on iOS
+  simulators. Do not describe it as a production-build or physical-device fix
+  until those targets are tested explicitly.
+- The active-category rollup defect was a first-use correctness blocker. It is
+  not evidence that repeated manual transaction entry is sustainable.
+- Reaching the sign-in screen proves startup only. It does not prove the
+  authenticated monthly workflow or persisted data behavior.
+
+- [ ] **Step 1: Record the exact runtime targets**
+
+Record the web browser and URL, mobile runtime, operating-system version, and
+whether the mobile target is a simulator, physical device, Expo Go,
+development build, or production build. Keep each resulting claim limited to
+the target actually exercised.
+
+- [ ] **Step 2: Execute the signed-in first-month vertical slice on web**
+
+Using one authenticated account:
+
+1. Create a new active expense category.
+2. Confirm its zero-value row appears without first creating a budget or
+   transaction.
+3. Save a monthly budget for that category.
+4. Add a transaction with a date inside the selected month.
+5. Change to another month and return.
+6. Reload the application.
+
+Expected: the category, budget, transaction date, actual amount, difference,
+and remaining balance are correct after month navigation and reload.
+
+- [ ] **Step 3: Execute the same signed-in vertical slice on mobile**
+
+Repeat Step 2 in the mobile runtime. Select the transaction date with the day
+stepper and exercise both month-boundary disabled states.
+
+Expected: no startup or interaction crash occurs; the date cannot leave the
+selected month; and the persisted values match the web result for the same
+account.
+
+- [ ] **Step 4: Observe manual-entry friction separately**
+
+During normal personal use, record concrete friction such as time to add a
+transaction, missed entries, corrections, or returning to the spreadsheet.
+Do not close the manual-entry adoption risk from unit tests, builds, simulator
+launches, or a single scripted transaction.
+
+- [ ] **Step 5: Apply the next-feature gate**
+
+Proceed to new feature work only when the authenticated vertical slice passes
+on the targets recorded in Step 1. Report manual-entry sustainability as open
+until repeated real-use evidence supports a conclusion.
