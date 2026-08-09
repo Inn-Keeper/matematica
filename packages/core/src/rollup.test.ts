@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { summarizeMonth } from "./rollup";
-import { addMonths, monthDateRange, previousMonth } from "./month";
+import {
+  addMonths,
+  defaultDateForMonth,
+  monthDateBounds,
+  monthDateRange,
+  previousMonth,
+} from "./month";
 import type { Budget, Category, Transaction } from "./types";
 
 const cat = (
@@ -112,5 +118,17 @@ describe("month utils", () => {
       start: "2026-12-01",
       end: "2027-01-01",
     });
+  });
+
+  it("returns inclusive month bounds including leap day", () => {
+    expect(monthDateBounds("2024-02")).toEqual({
+      min: "2024-02-01",
+      max: "2024-02-29",
+    });
+  });
+
+  it("uses today only when it belongs to the selected month", () => {
+    expect(defaultDateForMonth("2026-08", "2026-08-09")).toBe("2026-08-09");
+    expect(defaultDateForMonth("2026-07", "2026-08-09")).toBe("2026-07-01");
   });
 });
