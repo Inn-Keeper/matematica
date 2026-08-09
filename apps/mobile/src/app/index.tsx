@@ -427,6 +427,10 @@ export default function MonthScreen() {
                   accessibilityLabel="Previous transaction day"
                   accessibilityState={{ disabled: date === min }}
                   style={{
+                    minWidth: 44,
+                    minHeight: 44,
+                    alignItems: "center",
+                    justifyContent: "center",
                     paddingHorizontal: 16,
                     paddingVertical: 10,
                     opacity: date === min ? 0.35 : 1,
@@ -434,7 +438,13 @@ export default function MonthScreen() {
                 >
                   <Text style={{ color: color.text, fontSize: 18 }}>←</Text>
                 </Pressable>
-                <Text style={{ color: color.textSecondary }}>
+                <Text
+                  style={{
+                    color: color.textSecondary,
+                    flexShrink: 1,
+                    textAlign: "center",
+                  }}
+                >
                   Date {dateLabel}
                 </Text>
                 <Pressable
@@ -446,6 +456,10 @@ export default function MonthScreen() {
                   accessibilityLabel="Next transaction day"
                   accessibilityState={{ disabled: date === max }}
                   style={{
+                    minWidth: 44,
+                    minHeight: 44,
+                    alignItems: "center",
+                    justifyContent: "center",
                     paddingHorizontal: 16,
                     paddingVertical: 10,
                     opacity: date === max ? 0.35 : 1,
