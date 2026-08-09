@@ -162,7 +162,11 @@ Replace the picker trigger and conditional picker with:
     accessibilityRole="button"
     accessibilityLabel="Previous transaction day"
     accessibilityState={{ disabled: date === min }}
-    style={{ paddingHorizontal: 16, paddingVertical: 10, opacity: date === min ? 0.35 : 1 }}
+    style={{
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      opacity: date === min ? 0.35 : 1,
+    }}
   >
     <Text style={{ color: color.text, fontSize: 18 }}>←</Text>
   </Pressable>
@@ -173,7 +177,11 @@ Replace the picker trigger and conditional picker with:
     accessibilityRole="button"
     accessibilityLabel="Next transaction day"
     accessibilityState={{ disabled: date === max }}
-    style={{ paddingHorizontal: 16, paddingVertical: 10, opacity: date === max ? 0.35 : 1 }}
+    style={{
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      opacity: date === max ? 0.35 : 1,
+    }}
   >
     <Text style={{ color: color.text, fontSize: 18 }}>→</Text>
   </Pressable>
