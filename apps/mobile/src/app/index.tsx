@@ -22,7 +22,14 @@ import {
 } from "@matematica/core";
 import DateTimePicker from "@expo/ui/community/datetime-picker";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { sb } from "../lib/supabase";
 import { useSession } from "./_layout";
 
@@ -61,6 +68,8 @@ export default function MonthScreen() {
     setData(null);
     setDate(defaultDateForMonth(month));
     setDatePickerOpen(false);
+    setEditingBudgetId(null);
+    setBudgetDraft("");
     reload();
   }, [month, reload]);
 
@@ -420,25 +429,40 @@ export default function MonthScreen() {
                 </Text>
               </Pressable>
               {datePickerOpen && (
-                <DateTimePicker
-                  value={new Date(`${date}T12:00:00`)}
-                  mode="date"
-                  minimumDate={new Date(`${min}T12:00:00`)}
-                  maximumDate={new Date(`${max}T12:00:00`)}
-                  presentation="dialog"
-                  accentColor={color.brand}
-                  themeVariant="dark"
-                  onValueChange={(_event, selectedDate) => {
-                    const year = selectedDate.getFullYear();
-                    const monthNumber = String(
-                      selectedDate.getMonth() + 1,
-                    ).padStart(2, "0");
-                    const day = String(selectedDate.getDate()).padStart(2, "0");
-                    setDate(`${year}-${monthNumber}-${day}`);
-                    setDatePickerOpen(false);
-                  }}
-                  onDismiss={() => setDatePickerOpen(false)}
-                />
+                <View style={{ gap: 8 }}>
+                  <DateTimePicker
+                    value={new Date(`${date}T12:00:00`)}
+                    mode="date"
+                    minimumDate={new Date(`${min}T12:00:00`)}
+                    maximumDate={new Date(`${max}T12:00:00`)}
+                    presentation={
+                      Platform.OS === "android" ? "dialog" : "inline"
+                    }
+                    display={Platform.OS === "ios" ? "inline" : "default"}
+                    accentColor={color.brand}
+                    themeVariant="dark"
+                    onValueChange={(_event, selectedDate) => {
+                      const year = selectedDate.getFullYear();
+                      const monthNumber = String(
+                        selectedDate.getMonth() + 1,
+                      ).padStart(2, "0");
+                      const day = String(selectedDate.getDate()).padStart(
+                        2,
+                        "0",
+                      );
+                      setDate(`${year}-${monthNumber}-${day}`);
+                      setDatePickerOpen(false);
+                    }}
+                    onDismiss={() => setDatePickerOpen(false)}
+                  />
+                  {Platform.OS === "ios" && (
+                    <Pressable onPress={() => setDatePickerOpen(false)}>
+                      <Text style={{ color: color.brand, fontWeight: "700" }}>
+                        Done
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
               )}
               <View style={[row, { gap: 8, flexWrap: "wrap" }]}>
                 {active.map((c) => (
