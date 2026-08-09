@@ -12,6 +12,7 @@ import {
   monthDateBounds,
   parseAmountToCents,
   streamInsights,
+  stepDateWithinMonth,
   summarizeMonth,
   upsertBudget,
   type Budget,
@@ -20,16 +21,8 @@ import {
   type Kind,
   type Transaction,
 } from "@matematica/core";
-import DateTimePicker from "@expo/ui/community/datetime-picker";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { sb } from "../lib/supabase";
 import { useSession } from "./_layout";
 
@@ -47,7 +40,6 @@ export default function MonthScreen() {
   const [data, setData] = useState<MonthData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(defaultDateForMonth(month));
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -67,7 +59,6 @@ export default function MonthScreen() {
   useEffect(() => {
     setData(null);
     setDate(defaultDateForMonth(month));
-    setDatePickerOpen(false);
     setEditingBudgetId(null);
     setBudgetDraft("");
     reload();
@@ -169,6 +160,11 @@ export default function MonthScreen() {
 
   const monthLabel = new Date(`${month}-15`).toLocaleDateString("en-US", {
     month: "long",
+    year: "numeric",
+  });
+  const dateLabel = new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
     year: "numeric",
   });
   const { min, max } = monthDateBounds(month);
@@ -412,58 +408,52 @@ export default function MonthScreen() {
                 gap: 8,
               }}
             >
-              <Pressable
-                onPress={() => setDatePickerOpen(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Choose transaction date"
-                style={{
-                  alignSelf: "flex-start",
-                  backgroundColor: color.cardAlt,
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                }}
+              <View
+                style={[
+                  row,
+                  {
+                    justifyContent: "space-between",
+                    backgroundColor: color.cardAlt,
+                    borderRadius: 10,
+                  },
+                ]}
               >
+                <Pressable
+                  onPress={() =>
+                    setDate((value) => stepDateWithinMonth(value, -1))
+                  }
+                  disabled={date === min}
+                  accessibilityRole="button"
+                  accessibilityLabel="Previous transaction day"
+                  accessibilityState={{ disabled: date === min }}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    opacity: date === min ? 0.35 : 1,
+                  }}
+                >
+                  <Text style={{ color: color.text, fontSize: 18 }}>←</Text>
+                </Pressable>
                 <Text style={{ color: color.textSecondary }}>
-                  Date {date.slice(8, 10)}/{date.slice(5, 7)}/{date.slice(0, 4)}
+                  Date {dateLabel}
                 </Text>
-              </Pressable>
-              {datePickerOpen && (
-                <View style={{ gap: 8 }}>
-                  <DateTimePicker
-                    value={new Date(`${date}T12:00:00`)}
-                    mode="date"
-                    minimumDate={new Date(`${min}T12:00:00`)}
-                    maximumDate={new Date(`${max}T12:00:00`)}
-                    presentation={
-                      Platform.OS === "android" ? "dialog" : "inline"
-                    }
-                    display={Platform.OS === "ios" ? "inline" : "default"}
-                    accentColor={color.brand}
-                    themeVariant="dark"
-                    onValueChange={(_event, selectedDate) => {
-                      const year = selectedDate.getFullYear();
-                      const monthNumber = String(
-                        selectedDate.getMonth() + 1,
-                      ).padStart(2, "0");
-                      const day = String(selectedDate.getDate()).padStart(
-                        2,
-                        "0",
-                      );
-                      setDate(`${year}-${monthNumber}-${day}`);
-                      setDatePickerOpen(false);
-                    }}
-                    onDismiss={() => setDatePickerOpen(false)}
-                  />
-                  {Platform.OS === "ios" && (
-                    <Pressable onPress={() => setDatePickerOpen(false)}>
-                      <Text style={{ color: color.brand, fontWeight: "700" }}>
-                        Done
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
-              )}
+                <Pressable
+                  onPress={() =>
+                    setDate((value) => stepDateWithinMonth(value, 1))
+                  }
+                  disabled={date === max}
+                  accessibilityRole="button"
+                  accessibilityLabel="Next transaction day"
+                  accessibilityState={{ disabled: date === max }}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 10,
+                    opacity: date === max ? 0.35 : 1,
+                  }}
+                >
+                  <Text style={{ color: color.text, fontSize: 18 }}>→</Text>
+                </Pressable>
+              </View>
               <View style={[row, { gap: 8, flexWrap: "wrap" }]}>
                 {active.map((c) => (
                   <Pressable
