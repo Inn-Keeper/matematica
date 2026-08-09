@@ -30,6 +30,18 @@ export function defaultDateForMonth(
   return today.startsWith(`${month}-`) ? today : `${month}-01`;
 }
 
+export function stepDateWithinMonth(date: string, delta: -1 | 1): string {
+  const [year, month, day] = date.split("-").map(Number) as [
+    number,
+    number,
+    number,
+  ];
+  const stepped = new Date(Date.UTC(year, month - 1, day + delta))
+    .toISOString()
+    .slice(0, 10);
+  return stepped.slice(0, 7) === date.slice(0, 7) ? stepped : date;
+}
+
 /** End-exclusive ISO date range covering the month. */
 export function monthDateRange(month: string): { start: string; end: string } {
   return { start: `${month}-01`, end: `${addMonths(month, 1)}-01` };
