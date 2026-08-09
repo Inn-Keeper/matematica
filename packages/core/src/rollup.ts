@@ -22,7 +22,13 @@ export function summarizeMonth(
     );
   }
 
-  const ids = new Set([...planned.keys(), ...actual.keys()]);
+  const ids = new Set([
+    ...categories
+      .filter((category) => !category.archived)
+      .map((category) => category.id),
+    ...planned.keys(),
+    ...actual.keys(),
+  ]);
   const rows = [...ids]
     .map((id) => byCategory.get(id))
     .filter((c): c is Category => c !== undefined)

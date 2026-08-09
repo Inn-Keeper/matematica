@@ -67,10 +67,22 @@ describe("summarizeMonth", () => {
     );
   });
 
-  it("empty month yields empty summary", () => {
+  it("includes active categories with no plan or transactions", () => {
     const s = summarizeMonth([cat("food", "expense")], [], []);
-    expect(s.rows).toEqual([]);
+    expect(s.rows).toEqual([
+      {
+        category: cat("food", "expense"),
+        plannedCents: 0,
+        actualCents: 0,
+        diffCents: 0,
+      },
+    ]);
     expect(s.remainingCents).toBe(0);
+  });
+
+  it("omits archived categories with no month data", () => {
+    const s = summarizeMonth([cat("old", "expense", true)], [], []);
+    expect(s.rows).toEqual([]);
   });
 
   it("archived categories with month data still appear", () => {
