@@ -1,7 +1,7 @@
 # Matematica Mobile Date Control Design
 
 **Date:** 2026-08-09  
-**Status:** Approved design; awaiting written-spec review
+**Status:** Approved for implementation
 
 ## Problem
 
