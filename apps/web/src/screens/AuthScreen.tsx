@@ -5,11 +5,19 @@ import { sb } from "../lib/supabase";
 export function AuthScreen() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sent" | string>("idle");
+  const [anonymousPending, setAnonymousPending] = useState(false);
 
   async function sendLink(e: React.FormEvent) {
     e.preventDefault();
     const { error } = await sb.auth.signInWithOtp({ email });
     setStatus(error ? error.message : "sent");
+  }
+
+  async function continueAnonymously() {
+    setAnonymousPending(true);
+    const { error } = await sb.auth.signInAnonymously();
+    if (error) setStatus(error.message);
+    setAnonymousPending(false);
   }
 
   return (
@@ -69,6 +77,22 @@ export function AuthScreen() {
             )}
           </>
         )}
+        <button
+          type="button"
+          onClick={continueAnonymously}
+          disabled={anonymousPending}
+          style={{
+            background: color.cardAlt,
+            color: color.text,
+            border: `1px solid ${color.hairline}`,
+            borderRadius: radius.control,
+            padding: space.sm,
+            fontWeight: 700,
+            opacity: anonymousPending ? 0.6 : 1,
+          }}
+        >
+          {anonymousPending ? "Signing in..." : "Continue anonymously"}
+        </button>
       </form>
     </main>
   );
