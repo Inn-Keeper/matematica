@@ -11,10 +11,18 @@ export const useSession = () => useContext(SessionContext);
 function AuthScreen() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sent" | string>("idle");
+  const [anonymousPending, setAnonymousPending] = useState(false);
 
   async function sendLink() {
     const { error } = await sb.auth.signInWithOtp({ email });
     setStatus(error ? error.message : "sent");
+  }
+
+  async function continueAnonymously() {
+    setAnonymousPending(true);
+    const { error } = await sb.auth.signInAnonymously();
+    if (error) setStatus(error.message);
+    setAnonymousPending(false);
   }
 
   return (
@@ -56,6 +64,14 @@ function AuthScreen() {
           )}
         </>
       )}
+      <View style={{ marginTop: 12 }}>
+        <Button
+          title={anonymousPending ? "Signing in..." : "Continue anonymously"}
+          color={color.textSecondary}
+          disabled={anonymousPending}
+          onPress={continueAnonymously}
+        />
+      </View>
     </View>
   );
 }
