@@ -47,6 +47,8 @@ export function MonthScreen({ session }: { session: Session }) {
     ? summarizeMonth(data.categories, data.budgets, data.transactions)
     : null;
   const emptyPlan = data !== null && data.budgets.length === 0;
+  const hasActiveCategories =
+    data?.categories.some((category) => !category.archived) ?? false;
 
   async function copyPlan() {
     try {
@@ -123,7 +125,14 @@ export function MonthScreen({ session }: { session: Session }) {
                 ease: motionTokens.ease,
               }}
             >
-              {emptyPlan && (
+              {!hasActiveCategories && (
+                <CategoryManager
+                  categories={data.categories}
+                  onChanged={reload}
+                  initiallyOpen
+                />
+              )}
+              {emptyPlan && hasActiveCategories && (
                 <button
                   onClick={copyPlan}
                   style={{
@@ -142,20 +151,24 @@ export function MonthScreen({ session }: { session: Session }) {
                 month={month}
                 onChanged={reload}
               />
-              <QuickAdd
-                categories={data.categories}
-                month={month}
-                onAdded={reload}
-              />
+              {hasActiveCategories && (
+                <QuickAdd
+                  categories={data.categories}
+                  month={month}
+                  onAdded={reload}
+                />
+              )}
               <Ledger
                 transactions={data.transactions}
                 categories={data.categories}
                 onChanged={reload}
               />
-              <CategoryManager
-                categories={data.categories}
-                onChanged={reload}
-              />
+              {hasActiveCategories && (
+                <CategoryManager
+                  categories={data.categories}
+                  onChanged={reload}
+                />
+              )}
               <ChatPanel month={month} session={session} />
             </motion.div>
           )}

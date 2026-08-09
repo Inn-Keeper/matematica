@@ -14,11 +14,13 @@ import { sb } from "../lib/supabase";
 export function CategoryManager({
   categories,
   onChanged,
+  initiallyOpen = false,
 }: {
   categories: Category[];
   onChanged: () => void;
+  initiallyOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initiallyOpen);
   const [name, setName] = useState("");
   const [kind, setKind] = useState<Kind>("expense");
   const [error, setError] = useState<string | null>(null);

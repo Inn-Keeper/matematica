@@ -1,6 +1,8 @@
 import {
   addTransaction,
   color,
+  defaultDateForMonth,
+  monthDateBounds,
   parseAmountToCents,
   radius,
   space,
@@ -19,10 +21,8 @@ export function QuickAdd({
   onAdded: () => void;
 }) {
   const active = categories.filter((c) => !c.archived);
-  const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(
-    today.startsWith(month) ? today : `${month}-01`,
-  );
+  const { min, max } = monthDateBounds(month);
+  const [date, setDate] = useState(defaultDateForMonth(month));
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -71,6 +71,8 @@ export function QuickAdd({
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
+        min={min}
+        max={max}
         required
         style={field}
       />

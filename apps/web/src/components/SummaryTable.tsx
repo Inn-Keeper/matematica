@@ -95,16 +95,22 @@ export function SummaryTable({
                 )}
               </td>
               <td
-                className="cursor-pointer text-right"
+                className={`${row.category.archived ? "" : "cursor-pointer"} text-right`}
                 style={{ fontFamily: font.mono }}
-                onClick={() => {
-                  setEditing(row.category.id);
-                  setDraft(
-                    (row.plannedCents / 100).toFixed(2).replace(".", ","),
-                  );
-                }}
+                onClick={
+                  row.category.archived
+                    ? undefined
+                    : () => {
+                        setEditing(row.category.id);
+                        setDraft(
+                          (row.plannedCents / 100)
+                            .toFixed(2)
+                            .replace(".", ","),
+                        );
+                      }
+                }
               >
-                {editing === row.category.id ? (
+                {editing === row.category.id && !row.category.archived ? (
                   <input
                     autoFocus
                     value={draft}
