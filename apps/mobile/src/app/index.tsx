@@ -1,20 +1,26 @@
 import {
+  addCategory,
   addMonths,
   addTransaction,
   color,
   copyPlanFromPreviousMonth,
   currentMonth,
+  defaultDateForMonth,
   deleteTransaction,
   fetchMonthData,
   formatBRL,
+  monthDateBounds,
   parseAmountToCents,
   streamInsights,
   summarizeMonth,
+  upsertBudget,
   type Budget,
   type Category,
   type ChatMessage,
+  type Kind,
   type Transaction,
 } from "@matematica/core";
+import DateTimePicker from "@expo/ui/community/datetime-picker";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { sb } from "../lib/supabase";
@@ -33,9 +39,16 @@ export default function MonthScreen() {
   const [month, setMonth] = useState(currentMonth());
   const [data, setData] = useState<MonthData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [date, setDate] = useState(defaultDateForMonth(month));
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryKind, setCategoryKind] = useState<Kind>("expense");
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
+  const [budgetDraft, setBudgetDraft] = useState("");
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,8 +59,10 @@ export default function MonthScreen() {
 
   useEffect(() => {
     setData(null);
+    setDate(defaultDateForMonth(month));
+    setDatePickerOpen(false);
     reload();
-  }, [reload]);
+  }, [month, reload]);
 
   const summary = data
     ? summarizeMonth(data.categories, data.budgets, data.transactions)
@@ -59,29 +74,62 @@ export default function MonthScreen() {
       await action();
       setError(null);
       reload();
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     }
   }
 
-  function addTx() {
+  async function addTx() {
     const cents = parseAmountToCents(amount);
     if (cents === null || cents === 0 || !categoryId) {
       setError("Invalid amount or category");
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
-    guard(() =>
+    const saved = await guard(() =>
       addTransaction(sb, {
         category_id: categoryId,
-        date: today.startsWith(month) ? today : `${month}-01`,
+        date,
         amount_cents: cents,
         description,
       }),
-    ).then(() => {
+    );
+    if (saved) {
       setAmount("");
       setDescription("");
-    });
+    }
+  }
+
+  async function createCategory() {
+    const name = categoryName.trim();
+    if (!name) {
+      setError("Enter a category name");
+      return;
+    }
+    const saved = await guard(() =>
+      addCategory(sb, { name, kind: categoryKind }),
+    );
+    if (saved) {
+      setCategoryName("");
+      setCategoryFormOpen(false);
+    }
+  }
+
+  async function saveBudget(categoryId: string) {
+    const cents = parseAmountToCents(budgetDraft);
+    if (cents === null) {
+      setError("Invalid amount");
+      return;
+    }
+    const saved = await guard(() =>
+      upsertBudget(sb, {
+        category_id: categoryId,
+        month,
+        planned_cents: cents,
+      }),
+    );
+    if (saved) setEditingBudgetId(null);
   }
 
   async function sendChat() {
@@ -114,6 +162,82 @@ export default function MonthScreen() {
     month: "long",
     year: "numeric",
   });
+  const { min, max } = monthDateBounds(month);
+  const categoryControl =
+    active.length === 0 || categoryFormOpen ? (
+      <View
+        style={{
+          backgroundColor: color.card,
+          borderRadius: 16,
+          padding: 16,
+          gap: 10,
+        }}
+      >
+        <Text style={{ color: color.text, fontWeight: "700" }}>
+          {active.length === 0 ? "Create your first category" : "Add category"}
+        </Text>
+        <TextInput
+          value={categoryName}
+          onChangeText={setCategoryName}
+          placeholder="Category name"
+          placeholderTextColor={color.textMuted}
+          accessibilityLabel="Category name"
+          style={{
+            color: color.text,
+            backgroundColor: color.cardAlt,
+            borderRadius: 10,
+            padding: 10,
+          }}
+        />
+        <View style={[row, { gap: 8 }]}>
+          {(["expense", "income"] as const).map((value) => (
+            <Pressable
+              key={value}
+              onPress={() => setCategoryKind(value)}
+              style={{
+                backgroundColor:
+                  categoryKind === value ? color.brandSoft : color.cardAlt,
+                borderRadius: 999,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+              }}
+            >
+              <Text
+                style={{
+                  color:
+                    categoryKind === value ? color.brand : color.textSecondary,
+                  fontWeight: "500",
+                }}
+              >
+                {value === "expense" ? "Expense" : "Income"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <View style={[row, { gap: 12 }]}>
+          <Pressable
+            onPress={createCategory}
+            style={{
+              backgroundColor: color.brand,
+              borderRadius: 10,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+            }}
+          >
+            <Text style={{ color: color.screen, fontWeight: "700" }}>Add</Text>
+          </Pressable>
+          {active.length > 0 && (
+            <Pressable onPress={() => setCategoryFormOpen(false)}>
+              <Text style={{ color: color.textMuted }}>Cancel</Text>
+            </Pressable>
+          )}
+        </View>
+      </View>
+    ) : (
+      <Pressable onPress={() => setCategoryFormOpen(true)}>
+        <Text style={{ color: color.textMuted }}>Add category</Text>
+      </Pressable>
+    );
 
   return (
     <ScrollView
@@ -142,7 +266,9 @@ export default function MonthScreen() {
 
       {data && summary && (
         <>
-          {data.budgets.length === 0 && (
+          {active.length === 0 && categoryControl}
+
+          {active.length > 0 && data.budgets.length === 0 && (
             <Pressable
               onPress={() => guard(() => copyPlanFromPreviousMonth(sb, month))}
               style={{
@@ -168,27 +294,78 @@ export default function MonthScreen() {
             {summary.rows.map((r) => (
               <View
                 key={r.category.id}
-                style={[row, { justifyContent: "space-between" }]}
+                style={{
+                  gap: 6,
+                  paddingVertical: 4,
+                  borderTopWidth: 1,
+                  borderTopColor: color.hairline,
+                }}
               >
-                <Text style={{ color: color.text, flex: 1 }}>
-                  {r.category.name}
-                </Text>
-                <Text style={{ color: color.textSecondary, marginRight: 12 }}>
-                  {formatBRL(r.actualCents)} / {formatBRL(r.plannedCents)}
-                </Text>
-                <Text
-                  style={{
-                    color:
-                      r.diffCents === 0
-                        ? color.textMuted
-                        : r.diffCents > 0
-                          ? color.income
-                          : color.expense,
-                  }}
-                >
-                  {r.diffCents > 0 ? "+" : ""}
-                  {formatBRL(r.diffCents)}
-                </Text>
+                <View style={[row, { justifyContent: "space-between" }]}>
+                  <Text style={{ color: color.text, flex: 1 }}>
+                    {r.category.name}
+                  </Text>
+                  <Text style={{ color: color.textSecondary, marginRight: 12 }}>
+                    Actual {formatBRL(r.actualCents)}
+                  </Text>
+                  <Text
+                    style={{
+                      color:
+                        r.diffCents === 0
+                          ? color.textMuted
+                          : r.diffCents > 0
+                            ? color.income
+                            : color.expense,
+                    }}
+                  >
+                    {r.diffCents > 0 ? "+" : ""}
+                    {formatBRL(r.diffCents)}
+                  </Text>
+                </View>
+                {editingBudgetId === r.category.id && !r.category.archived ? (
+                  <View style={[row, { gap: 8 }]}>
+                    <TextInput
+                      autoFocus
+                      value={budgetDraft}
+                      onChangeText={setBudgetDraft}
+                      keyboardType="decimal-pad"
+                      accessibilityLabel={`Planned amount for ${r.category.name}`}
+                      style={{
+                        flex: 1,
+                        color: color.text,
+                        backgroundColor: color.cardAlt,
+                        borderRadius: 10,
+                        paddingHorizontal: 10,
+                        paddingVertical: 8,
+                      }}
+                    />
+                    <Pressable onPress={() => saveBudget(r.category.id)}>
+                      <Text style={{ color: color.brand, fontWeight: "700" }}>
+                        Save
+                      </Text>
+                    </Pressable>
+                    <Pressable onPress={() => setEditingBudgetId(null)}>
+                      <Text style={{ color: color.textMuted }}>Cancel</Text>
+                    </Pressable>
+                  </View>
+                ) : r.category.archived ? (
+                  <Text style={{ color: color.textMuted, fontSize: 12 }}>
+                    Archived · Plan {formatBRL(r.plannedCents)}
+                  </Text>
+                ) : (
+                  <Pressable
+                    onPress={() => {
+                      setEditingBudgetId(r.category.id);
+                      setBudgetDraft(
+                        (r.plannedCents / 100).toFixed(2).replace(".", ","),
+                      );
+                    }}
+                  >
+                    <Text style={{ color: color.brand, fontSize: 12 }}>
+                      Plan {formatBRL(r.plannedCents)} · Edit
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             ))}
             <View
@@ -217,82 +394,123 @@ export default function MonthScreen() {
             </View>
           </View>
 
-          <View
-            style={{
-              backgroundColor: color.card,
-              borderRadius: 16,
-              padding: 16,
-              gap: 8,
-            }}
-          >
-            <View style={[row, { gap: 8, flexWrap: "wrap" }]}>
-              {active.map((c) => (
-                <Pressable
-                  key={c.id}
-                  onPress={() => setCategoryId(c.id)}
-                  style={{
-                    backgroundColor:
-                      categoryId === c.id ? color.brandSoft : color.cardAlt,
-                    borderRadius: 999,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color:
-                        categoryId === c.id ? color.brand : color.textSecondary,
-                    }}
-                  >
-                    {c.name}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-            <TextInput
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="amount"
-              placeholderTextColor={color.textMuted}
-              keyboardType="decimal-pad"
+          {active.length > 0 && (
+            <View
               style={{
-                color: color.text,
-                backgroundColor: color.cardAlt,
-                borderRadius: 10,
-                padding: 10,
-              }}
-            />
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="description"
-              placeholderTextColor={color.textMuted}
-              style={{
-                color: color.text,
-                backgroundColor: color.cardAlt,
-                borderRadius: 10,
-                padding: 10,
-              }}
-            />
-            <Pressable
-              onPress={addTx}
-              style={{
-                backgroundColor: color.brand,
-                borderRadius: 10,
-                padding: 12,
+                backgroundColor: color.card,
+                borderRadius: 16,
+                padding: 16,
+                gap: 8,
               }}
             >
-              <Text
+              <Pressable
+                onPress={() => setDatePickerOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Choose transaction date"
                 style={{
-                  color: color.screen,
-                  textAlign: "center",
-                  fontWeight: "700",
+                  alignSelf: "flex-start",
+                  backgroundColor: color.cardAlt,
+                  borderRadius: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
                 }}
               >
-                Adicionar
-              </Text>
-            </Pressable>
-          </View>
+                <Text style={{ color: color.textSecondary }}>
+                  Date {date.slice(8, 10)}/{date.slice(5, 7)}/{date.slice(0, 4)}
+                </Text>
+              </Pressable>
+              {datePickerOpen && (
+                <DateTimePicker
+                  value={new Date(`${date}T12:00:00`)}
+                  mode="date"
+                  minimumDate={new Date(`${min}T12:00:00`)}
+                  maximumDate={new Date(`${max}T12:00:00`)}
+                  presentation="dialog"
+                  accentColor={color.brand}
+                  themeVariant="dark"
+                  onValueChange={(_event, selectedDate) => {
+                    const year = selectedDate.getFullYear();
+                    const monthNumber = String(
+                      selectedDate.getMonth() + 1,
+                    ).padStart(2, "0");
+                    const day = String(selectedDate.getDate()).padStart(2, "0");
+                    setDate(`${year}-${monthNumber}-${day}`);
+                    setDatePickerOpen(false);
+                  }}
+                  onDismiss={() => setDatePickerOpen(false)}
+                />
+              )}
+              <View style={[row, { gap: 8, flexWrap: "wrap" }]}>
+                {active.map((c) => (
+                  <Pressable
+                    key={c.id}
+                    onPress={() => setCategoryId(c.id)}
+                    style={{
+                      backgroundColor:
+                        categoryId === c.id ? color.brandSoft : color.cardAlt,
+                      borderRadius: 999,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color:
+                          categoryId === c.id
+                            ? color.brand
+                            : color.textSecondary,
+                      }}
+                    >
+                      {c.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <TextInput
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="amount"
+                placeholderTextColor={color.textMuted}
+                keyboardType="decimal-pad"
+                style={{
+                  color: color.text,
+                  backgroundColor: color.cardAlt,
+                  borderRadius: 10,
+                  padding: 10,
+                }}
+              />
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                placeholder="description"
+                placeholderTextColor={color.textMuted}
+                style={{
+                  color: color.text,
+                  backgroundColor: color.cardAlt,
+                  borderRadius: 10,
+                  padding: 10,
+                }}
+              />
+              <Pressable
+                onPress={addTx}
+                style={{
+                  backgroundColor: color.brand,
+                  borderRadius: 10,
+                  padding: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    color: color.screen,
+                    textAlign: "center",
+                    fontWeight: "700",
+                  }}
+                >
+                  Adicionar
+                </Text>
+              </Pressable>
+            </View>
+          )}
 
           <View
             style={{
@@ -344,6 +562,8 @@ export default function MonthScreen() {
               );
             })}
           </View>
+
+          {active.length > 0 && categoryControl}
 
           <View
             style={{
