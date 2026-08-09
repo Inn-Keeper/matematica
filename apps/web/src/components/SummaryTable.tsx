@@ -103,9 +103,7 @@ export function SummaryTable({
                     : () => {
                         setEditing(row.category.id);
                         setDraft(
-                          (row.plannedCents / 100)
-                            .toFixed(2)
-                            .replace(".", ","),
+                          (row.plannedCents / 100).toFixed(2).replace(".", ","),
                         );
                       }
                 }

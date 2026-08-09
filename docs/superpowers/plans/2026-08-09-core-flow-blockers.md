@@ -23,10 +23,12 @@
 ### Task 1: Include Active Categories in Monthly Rollups
 
 **Files:**
+
 - Modify: `packages/core/src/rollup.test.ts`
 - Modify: `packages/core/src/rollup.ts`
 
 **Interfaces:**
+
 - Consumes: `summarizeMonth(categories, budgets, transactions)` and `Category.archived`.
 - Produces: `MonthSummary.rows` containing all active categories plus archived categories with month data.
 
@@ -66,7 +68,9 @@ Build the row IDs from active categories before merging plan and transaction IDs
 
 ```ts
 const ids = new Set([
-  ...categories.filter((category) => !category.archived).map((category) => category.id),
+  ...categories
+    .filter((category) => !category.archived)
+    .map((category) => category.id),
   ...planned.keys(),
   ...actual.keys(),
 ]);
@@ -92,10 +96,12 @@ rtk git commit -m "fix(core): include active categories in month summaries"
 ### Task 2: Add Shared Month Date Helpers
 
 **Files:**
+
 - Modify: `packages/core/src/rollup.test.ts`
 - Modify: `packages/core/src/month.ts`
 
 **Interfaces:**
+
 - Produces: `monthDateBounds(month: string): { min: string; max: string }`.
 - Produces: `defaultDateForMonth(month: string, today?: string): string`.
 - Consumers: web quick-add and mobile transaction form.
@@ -164,12 +170,14 @@ rtk git commit -m "feat(core): expose selected-month date helpers"
 ### Task 3: Unblock Web First Use
 
 **Files:**
+
 - Modify: `apps/web/src/components/CategoryManager.tsx`
 - Modify: `apps/web/src/components/QuickAdd.tsx`
 - Modify: `apps/web/src/components/SummaryTable.tsx`
 - Modify: `apps/web/src/screens/MonthScreen.tsx`
 
 **Interfaces:**
+
 - Consumes: `monthDateBounds`, `defaultDateForMonth`, existing category CRUD, and existing budget upsert.
 - Produces: an initially-open category manager and month-constrained transaction dates.
 
@@ -195,7 +203,8 @@ export function CategoryManager({
 In `MonthScreen`, derive:
 
 ```ts
-const hasActiveCategories = data?.categories.some((category) => !category.archived) ?? false;
+const hasActiveCategories =
+  data?.categories.some((category) => !category.archived) ?? false;
 ```
 
 Render `CategoryManager` with `initiallyOpen` before the summary when false.
@@ -243,9 +252,11 @@ rtk git commit -m "fix(web): unblock first month setup"
 ### Task 4: Add Mobile Category, Budget, and Date Controls
 
 **Files:**
+
 - Modify: `apps/mobile/src/app/index.tsx`
 
 **Interfaces:**
+
 - Consumes: `addCategory`, `upsertBudget`, `parseAmountToCents`, `monthDateBounds`, `defaultDateForMonth`, `Kind`, and `@expo/ui/community/datetime-picker`.
 - Produces: mobile category creation, inline budget saves, and a native constrained transaction date.
 
@@ -278,7 +289,7 @@ Add an async handler that trims the name, rejects an empty value with
 `"Enter a category name"`, calls:
 
 ```ts
-addCategory(sb, { name: categoryName.trim(), kind: categoryKind })
+addCategory(sb, { name: categoryName.trim(), kind: categoryKind });
 ```
 
 and clears/closes the form only after success.
@@ -302,7 +313,7 @@ upsertBudget(sb, {
   category_id: row.category.id,
   month,
   planned_cents: cents,
-})
+});
 ```
 
 Close the editor only after success. Archived historical rows remain read-only.
@@ -357,9 +368,11 @@ rtk git commit -m "fix(mobile): complete first month setup flow"
 ### Task 5: Full Verification and Runtime Bundling
 
 **Files:**
+
 - Verify only; modify implementation files only if a check exposes a defect.
 
 **Interfaces:**
+
 - Consumes: completed core, web, and mobile behavior.
 - Produces: verified repository state and an iOS-compatible JavaScript bundle.
 
