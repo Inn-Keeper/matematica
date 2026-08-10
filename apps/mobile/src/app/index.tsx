@@ -534,7 +534,7 @@ export default function MonthScreen() {
                     fontWeight: "700",
                   }}
                 >
-                  Adicionar
+                  Add
                 </Text>
               </Pressable>
             </View>

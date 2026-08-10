@@ -61,7 +61,7 @@ export function CategoryManager({
           style={{ color: color.textMuted }}
           onClick={() => setOpen(false)}
         >
-          fechar
+          Close
         </button>
       </div>
       {error && <p style={{ color: color.expense }}>{error}</p>}
@@ -131,7 +131,7 @@ export function CategoryManager({
           <option value="income">income</option>
         </select>
         <button type="submit" style={{ color: color.brand, fontWeight: 700 }}>
-          adicionar
+          Add
         </button>
       </form>
     </section>

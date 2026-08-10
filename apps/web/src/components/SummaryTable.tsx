@@ -67,7 +67,7 @@ export function SummaryTable({
         <thead>
           <tr style={{ color: color.textMuted, textAlign: "right" }}>
             <th className="text-left" style={{ fontWeight: 500 }}>
-              Categoria
+              Category
             </th>
             <th style={{ fontWeight: 500 }}>Planned</th>
             <th style={{ fontWeight: 500 }}>Actual</th>
