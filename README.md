@@ -9,6 +9,7 @@ Personal month-to-month finances — web + mobile replacing the old Excel sheet.
 - `packages/core` — shared types, tokens, money math, rollups, data layer
 - `supabase/` — schema migrations
 - AI assistant lives in the sibling repo `matematica-ai-api`
+- Future ideas are tracked in [`docs/FUTURE_FEATURES.md`](docs/FUTURE_FEATURES.md)
 
 ## Setup
 
