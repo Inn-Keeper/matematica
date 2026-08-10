@@ -1,8 +1,9 @@
-import { color } from "@matematica/core";
+import { color, parseAuthCallbackCode } from "@matematica/core";
 import type { Session } from "@supabase/supabase-js";
+import * as Linking from "expo-linking";
 import { Stack } from "expo-router";
-import { createContext, useContext, useEffect, useState } from "react";
-import { Button, Text, TextInput, View } from "react-native";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Button, Platform, Text, TextInput, View } from "react-native";
 import { sb } from "../lib/supabase";
 
 const SessionContext = createContext<Session | null>(null);
@@ -12,9 +13,32 @@ function AuthScreen() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sent" | string>("idle");
   const [anonymousPending, setAnonymousPending] = useState(false);
+  const linkingUrl = Linking.useLinkingURL();
+  const handledUrl = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (
+      Platform.OS === "web" ||
+      !linkingUrl ||
+      handledUrl.current === linkingUrl
+    ) {
+      return;
+    }
+
+    const code = parseAuthCallbackCode(linkingUrl, "matematica");
+    if (!code) return;
+    handledUrl.current = linkingUrl;
+    setStatus("Completing sign-in...");
+    sb.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) setStatus(error.message);
+    });
+  }, [linkingUrl]);
 
   async function sendLink() {
-    const { error } = await sb.auth.signInWithOtp({ email });
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: Linking.createURL("") },
+    });
     setStatus(error ? error.message : "sent");
   }
 
@@ -64,14 +88,16 @@ function AuthScreen() {
           )}
         </>
       )}
-      <View style={{ marginTop: 12 }}>
-        <Button
-          title={anonymousPending ? "Signing in..." : "Continue anonymously"}
-          color={color.textSecondary}
-          disabled={anonymousPending}
-          onPress={continueAnonymously}
-        />
-      </View>
+      {__DEV__ && (
+        <View style={{ marginTop: 12 }}>
+          <Button
+            title={anonymousPending ? "Signing in..." : "Continue anonymously"}
+            color={color.textSecondary}
+            disabled={anonymousPending}
+            onPress={continueAnonymously}
+          />
+        </View>
+      )}
     </View>
   );
 }

@@ -109,17 +109,28 @@ export async function setCategoryArchived(
   );
 }
 
+export function filterBudgetsByCategoryIds<
+  T extends Pick<Budget, "category_id">,
+>(budgets: T[], categoryIds: string[]): T[] {
+  const allowed = new Set(categoryIds);
+  return budgets.filter((budget) => allowed.has(budget.category_id));
+}
+
 /** Copies the previous month's budget rows into `month`. Returns rows copied. */
 export async function copyPlanFromPreviousMonth(
   sb: SupabaseClient,
   month: string,
+  activeCategoryIds: string[],
 ) {
-  const prev = unwrap(
-    await sb
-      .from("budgets")
-      .select("category_id,planned_cents")
-      .eq("month", previousMonth(month)),
-  ) as Pick<Budget, "category_id" | "planned_cents">[];
+  const prev = filterBudgetsByCategoryIds(
+    unwrap(
+      await sb
+        .from("budgets")
+        .select("category_id,planned_cents")
+        .eq("month", previousMonth(month)),
+    ) as Pick<Budget, "category_id" | "planned_cents">[],
+    activeCategoryIds,
+  );
   if (prev.length === 0) return 0;
   const user = await requireUser(sb);
   unwrap(

@@ -9,7 +9,10 @@ export function AuthScreen() {
 
   async function sendLink(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await sb.auth.signInWithOtp({ email });
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/` },
+    });
     setStatus(error ? error.message : "sent");
   }
 
@@ -77,22 +80,24 @@ export function AuthScreen() {
             )}
           </>
         )}
-        <button
-          type="button"
-          onClick={continueAnonymously}
-          disabled={anonymousPending}
-          style={{
-            background: color.cardAlt,
-            color: color.text,
-            border: `1px solid ${color.hairline}`,
-            borderRadius: radius.control,
-            padding: space.sm,
-            fontWeight: 700,
-            opacity: anonymousPending ? 0.6 : 1,
-          }}
-        >
-          {anonymousPending ? "Signing in..." : "Continue anonymously"}
-        </button>
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            onClick={continueAnonymously}
+            disabled={anonymousPending}
+            style={{
+              background: color.cardAlt,
+              color: color.text,
+              border: `1px solid ${color.hairline}`,
+              borderRadius: radius.control,
+              padding: space.sm,
+              fontWeight: 700,
+              opacity: anonymousPending ? 0.6 : 1,
+            }}
+          >
+            {anonymousPending ? "Signing in..." : "Continue anonymously"}
+          </button>
+        )}
       </form>
     </main>
   );

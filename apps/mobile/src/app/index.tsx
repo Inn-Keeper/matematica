@@ -11,6 +11,8 @@ import {
   formatBRL,
   monthDateBounds,
   parseAmountToCents,
+  renameCategory,
+  setCategoryArchived,
   streamInsights,
   stepDateWithinMonth,
   summarizeMonth,
@@ -46,6 +48,11 @@ export default function MonthScreen() {
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [categoryKind, setCategoryKind] = useState<Kind>("expense");
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
+  const [renamingCategoryId, setRenamingCategoryId] = useState<string | null>(
+    null,
+  );
+  const [renameDraft, setRenameDraft] = useState("");
   const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
   const [budgetDraft, setBudgetDraft] = useState("");
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -63,6 +70,14 @@ export default function MonthScreen() {
     setBudgetDraft("");
     reload();
   }, [month, reload]);
+
+  useEffect(() => {
+    if (!data) return;
+    const selectable = data.categories.filter((category) => !category.archived);
+    if (!selectable.some((category) => category.id === categoryId)) {
+      setCategoryId(selectable[0]?.id ?? "");
+    }
+  }, [categoryId, data]);
 
   const summary = data
     ? summarizeMonth(data.categories, data.budgets, data.transactions)
@@ -113,6 +128,30 @@ export default function MonthScreen() {
     if (saved) {
       setCategoryName("");
       setCategoryFormOpen(false);
+    }
+  }
+
+  async function saveCategoryName(category: Category) {
+    const name = renameDraft.trim();
+    if (!name) {
+      setError("Enter a category name");
+      return;
+    }
+    if (name === category.name) {
+      setError(null);
+      setRenamingCategoryId(null);
+      return;
+    }
+    const saved = await guard(() => renameCategory(sb, category.id, name));
+    if (saved) setRenamingCategoryId(null);
+  }
+
+  async function toggleCategoryArchived(category: Category) {
+    const saved = await guard(() =>
+      setCategoryArchived(sb, category.id, !category.archived),
+    );
+    if (saved && renamingCategoryId === category.id) {
+      setRenamingCategoryId(null);
     }
   }
 
@@ -244,6 +283,130 @@ export default function MonthScreen() {
       </Pressable>
     );
 
+  const categoryManagerControl =
+    data &&
+    data.categories.length > 0 &&
+    (categoryManagerOpen ? (
+      <View
+        style={{
+          backgroundColor: color.card,
+          borderRadius: 16,
+          padding: 16,
+          gap: 12,
+        }}
+      >
+        <View style={[row, { justifyContent: "space-between" }]}>
+          <Text style={{ color: color.text, fontWeight: "700" }}>
+            Categories
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close category management"
+            onPress={() => {
+              setError(null);
+              setCategoryManagerOpen(false);
+              setRenamingCategoryId(null);
+            }}
+          >
+            <Text style={{ color: color.textMuted }}>Close</Text>
+          </Pressable>
+        </View>
+        {data.categories.map((category) => (
+          <View
+            key={category.id}
+            style={[
+              row,
+              {
+                gap: 10,
+                paddingTop: 10,
+                borderTopWidth: 1,
+                borderTopColor: color.hairline,
+              },
+            ]}
+          >
+            {renamingCategoryId === category.id ? (
+              <TextInput
+                autoFocus
+                value={renameDraft}
+                onChangeText={setRenameDraft}
+                accessibilityLabel={`New name for ${category.name}`}
+                style={{
+                  flex: 1,
+                  color: color.text,
+                  backgroundColor: color.cardAlt,
+                  borderRadius: 10,
+                  paddingHorizontal: 10,
+                  paddingVertical: 8,
+                }}
+              />
+            ) : (
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    color: color.text,
+                    opacity: category.archived ? 0.45 : 1,
+                  }}
+                >
+                  {category.name}
+                </Text>
+                <Text style={{ color: color.textMuted, fontSize: 12 }}>
+                  {category.kind === "income" ? "Income" : "Expense"}
+                  {category.archived ? " · Archived" : ""}
+                </Text>
+              </View>
+            )}
+            {renamingCategoryId === category.id ? (
+              <>
+                <Pressable onPress={() => saveCategoryName(category)}>
+                  <Text style={{ color: color.brand, fontWeight: "700" }}>
+                    Save
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setError(null);
+                    setRenamingCategoryId(null);
+                  }}
+                >
+                  <Text style={{ color: color.textMuted }}>Cancel</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rename ${category.name}`}
+                  onPress={() => {
+                    setError(null);
+                    setRenamingCategoryId(category.id);
+                    setRenameDraft(category.name);
+                  }}
+                >
+                  <Text style={{ color: color.brand }}>Rename</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${category.archived ? "Restore" : "Archive"} ${category.name}`}
+                  onPress={() => toggleCategoryArchived(category)}
+                >
+                  <Text style={{ color: color.textMuted }}>
+                    {category.archived ? "Restore" : "Archive"}
+                  </Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        ))}
+      </View>
+    ) : (
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => setCategoryManagerOpen(true)}
+      >
+        <Text style={{ color: color.textMuted }}>Manage categories</Text>
+      </Pressable>
+    ));
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: color.screen }}
@@ -271,11 +434,24 @@ export default function MonthScreen() {
 
       {data && summary && (
         <>
-          {active.length === 0 && categoryControl}
+          {active.length === 0 && (
+            <>
+              {categoryControl}
+              {categoryManagerControl}
+            </>
+          )}
 
           {active.length > 0 && data.budgets.length === 0 && (
             <Pressable
-              onPress={() => guard(() => copyPlanFromPreviousMonth(sb, month))}
+              onPress={() =>
+                guard(() =>
+                  copyPlanFromPreviousMonth(
+                    sb,
+                    month,
+                    active.map((category) => category.id),
+                  ),
+                )
+              }
               style={{
                 backgroundColor: color.brandSoft,
                 borderRadius: 10,
@@ -591,7 +767,12 @@ export default function MonthScreen() {
             })}
           </View>
 
-          {active.length > 0 && categoryControl}
+          {active.length > 0 && (
+            <>
+              {categoryControl}
+              {categoryManagerControl}
+            </>
+          )}
 
           <View
             style={{

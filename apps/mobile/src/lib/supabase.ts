@@ -7,7 +7,9 @@ export const sb = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
   {
     auth: {
-      ...(Platform.OS !== "web" ? { storage: AsyncStorage } : {}),
+      ...(Platform.OS !== "web"
+        ? { storage: AsyncStorage, flowType: "pkce" as const }
+        : {}),
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: Platform.OS === "web",

@@ -52,7 +52,13 @@ export function MonthScreen({ session }: { session: Session }) {
 
   async function copyPlan() {
     try {
-      await copyPlanFromPreviousMonth(sb, month);
+      await copyPlanFromPreviousMonth(
+        sb,
+        month,
+        data?.categories
+          .filter((category) => !category.archived)
+          .map((category) => category.id) ?? [],
+      );
       reload();
     } catch (e) {
       setError((e as Error).message);
