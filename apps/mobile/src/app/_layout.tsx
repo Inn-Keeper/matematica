@@ -30,7 +30,11 @@ function AuthScreen() {
     handledUrl.current = linkingUrl;
     setStatus("Completing sign-in...");
     sb.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) setStatus(error.message);
+      if (error) {
+        setStatus(
+          "We couldn't complete this sign-in link. Request a new link and open it on this device.",
+        );
+      }
     });
   }, [linkingUrl]);
 
